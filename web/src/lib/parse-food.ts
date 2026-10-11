@@ -39,7 +39,7 @@ const UNIT_G: Record<string, number> = {
 const SPOON_ML = ["aceite", "vinagre", "tamari", "limon"];
 const MEAL_RE: Array<[RegExp, string]> = [
   [/desayun/, "desayuno"],
-  [/almor[sz]/, "almuerzo"],
+  [/almor[zc]/, "almuerzo"],
   [/merienda|merend/, "merienda"],
   [/media ma.ana/, "media-manana"],
   [/\bcen/, "cena"],
@@ -70,10 +70,28 @@ function findCandidates(core: string, refs: FoodRef[]): FoodRef[] {
     let score = 0;
     if (singulars(core).includes(n) || singulars(n).includes(core)) score = 3;
     else if (core.length >= 3 && (n.includes(core) || core.includes(n))) score = 2;
+    else {
+      // todos los tokens del texto aparecen en el nombre ("bife chorizo" → "bife de chorizo")
+      const ct = core.split(" ").filter((w) => w.length >= 3);
+      const nt = n.split(" ");
+      if (
+        ct.length > 0 &&
+        ct.every((w) => nt.some((x) => x.startsWith(w) || w.startsWith(x)))
+      )
+        score = 1;
+    }
     if (score > 0) out.push({ r, score });
   }
   return out
-    .sort((a, b) => b.score - a.score || a.r.name.localeCompare(b.r.name))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (a.r.kind === b.r.kind
+          ? a.r.name.localeCompare(b.r.name)
+          : a.r.kind === "food"
+            ? -1
+            : 1),
+    )
     .map((x) => x.r);
 }
 
@@ -96,11 +114,13 @@ export function parseMealText(
     }
   }
   if (!meal) questions.push("¿Qué comida fue? (desayuno, almuerzo, merienda, cena o snack)");
+  // el verbo de la comida ya cumplió (detectó meal): se saca para no contaminar matches
+  t = t.replace(/\b(desayun|almor[zc]|merend|merienda|cen|picote|antojo|snack)\w*/g, " ");
 
   // "no X" = lo nombró para excluirlo → se saca
   t = t.replace(/\bno\b[^,+.]+/g, " ");
   const parts = t
-    .split(/\s+(?:con|y|e|mas|\+)\s*|,/g)
+    .split(/[,+]|\s*\b(?:con|y|e|mas)\b\s*/g)
     .map((p) => p.trim())
     .filter(Boolean);
 
