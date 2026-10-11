@@ -8,6 +8,13 @@
       "when": 1791757959756,
       "tag": "0000_public_wendigo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791759642881,
+      "tag": "0001_jittery_peter_parker",
+      "breakpoints": true
     }
   ]
 }

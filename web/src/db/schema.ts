@@ -79,6 +79,7 @@ export const profiles = pgTable("profiles", {
   prefs: text("prefs").array(), // keto, vegetariana, sin-gluten...
   allergies: text("allergies").array(),
   dislikes: text("dislikes").array(),
+  notes: text("notes"), // objetivos, horarios, contexto libre
 });
 
 // ---------- Alimentos y recetas ----------
