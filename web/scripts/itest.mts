@@ -1,0 +1,175 @@
+// Test de integración E2E contra app corriendo (default http://localhost:3000).
+// Cubre: público, auth, diario CRUD, aislamiento entre usuarios, peso,
+// validación, sesiones, auditoría. Corre con: npx tsx scripts/itest.mts
+import postgres from "postgres";
+
+const BASE = process.env.BASE_URL ?? "http://localhost:3000";
+const stamp = Date.now();
+const A = { email: `a${stamp}@t.local`, password: "password-larga-1", name: "A" };
+const B = { email: `b${stamp}@t.local`, password: "password-larga-2", name: "B" };
+
+let pass = 0;
+let fail = 0;
+function check(name: string, cond: boolean, extra?: unknown) {
+  if (cond) {
+    pass++;
+    console.log(`ok ${name}`);
+  } else {
+    fail++;
+    console.log(`FAIL ${name}${extra !== undefined ? ` :: ${JSON.stringify(extra)}` : ""}`);
+  }
+}
+
+function jar(setCookies: string[]): string {
+  return setCookies.map((c) => c.split(";")[0]).join("; ");
+}
+
+async function login(email: string, password: string): Promise<string> {
+  const csrfRes = await fetch(`${BASE}/api/auth/csrf`);
+  const csrf = await csrfRes.json();
+  const csrfCookies = jar(csrfRes.headers.getSetCookie?.() ?? []);
+  const r = await fetch(`${BASE}/api/auth/callback/credentials`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: csrfCookies,
+    },
+    body: new URLSearchParams({
+      csrfToken: csrf.csrfToken,
+      email,
+      password,
+      callbackUrl: `${BASE}/dashboard`,
+      json: "true",
+    }),
+    redirect: "manual",
+  });
+  const cookies = r.headers.getSetCookie?.() ?? [];
+  return jar(cookies);
+}
+
+const J = { "Content-Type": "application/json" };
+const day = new Date().toISOString().slice(0, 10);
+
+// 1. Público
+check("landing 200", (await fetch(`${BASE}/`)).status === 200);
+const dashNoAuth = await fetch(`${BASE}/dashboard`, { redirect: "manual" });
+check("dashboard sin auth redirige a login", [307, 308].includes(dashNoAuth.status));
+check("diary sin auth 401", (await fetch(`${BASE}/api/diary`)).status === 401);
+check(
+  "diary POST sin auth 401",
+  (await fetch(`${BASE}/api/diary`, { method: "POST", headers: J, body: "{}" })).status === 401,
+);
+
+// 2. Registro
+let r = await fetch(`${BASE}/api/auth/register`, {
+  method: "POST", headers: J, body: JSON.stringify(A),
+});
+check("register A 201", r.status === 201, r.status);
+r = await fetch(`${BASE}/api/auth/register`, {
+  method: "POST", headers: J, body: JSON.stringify(A),
+});
+check("register duplicado 409", r.status === 409, r.status);
+r = await fetch(`${BASE}/api/auth/register`, {
+  method: "POST", headers: J, body: JSON.stringify({ email: "x@t.local", password: "corta" }),
+});
+check("register password corta 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/auth/register`, {
+  method: "POST", headers: J, body: JSON.stringify(B),
+});
+check("register B 201", r.status === 201, r.status);
+
+// 3. Login + sesión
+const cA = await login(A.email, A.password);
+check("login A da cookie", cA.includes("next-auth.session-token"));
+const cB = await login(B.email, B.password);
+check("login B da cookie", cB.includes("next-auth.session-token"));
+const bad = await login(A.email, "password-incorrecta");
+check("login malo no da sesión", !bad.includes("next-auth.session-token"));
+
+// 4. Diario CRUD (A)
+const H = (c: string) => ({ ...J, Cookie: c });
+r = await fetch(`${BASE}/api/diary?day=${day}`, { headers: { Cookie: cA } });
+let d = await r.json();
+check("diary vacío", r.status === 200 && d.entries.length === 0);
+
+r = await fetch(`${BASE}/api/diary`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ consumedAt: new Date().toISOString(), meal: "almuerzo", customName: "Yogur", qty: 200, unit: "g" }),
+});
+const created = await r.json();
+check("diary create 201", r.status === 201 && !!created.id, created);
+const entryId = created.id as string;
+
+r = await fetch(`${BASE}/api/diary`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ consumedAt: new Date().toISOString(), meal: "no-existe", qty: 1, unit: "g", customName: "X" }),
+});
+check("diary meal inválida 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/diary`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ consumedAt: new Date().toISOString(), meal: "cena", qty: -5, unit: "g", customName: "X" }),
+});
+check("diary qty negativa 400", r.status === 400, r.status);
+
+r = await fetch(`${BASE}/api/diary?day=${day}`, { headers: { Cookie: cA } });
+d = await r.json();
+check("diary lista 1 + parcial (custom sin datos)", d.entries.length === 1 && d.partial === true, d);
+
+// con alimento real del seed: pollo 200 g → 330 kcal
+const fr = await (await fetch(`${BASE}/api/foods?q=pollo`, { headers: { Cookie: cA } })).json();
+const pollo = fr.foods?.find((f: { name: string }) => f.name === "Pollo pechuga");
+check("seed trae Pollo pechuga", !!pollo, fr.foods?.map((f: { name: string }) => f.name));
+if (pollo) {
+  r = await fetch(`${BASE}/api/diary`, {
+    method: "POST", headers: H(cA),
+    body: JSON.stringify({ consumedAt: new Date().toISOString(), meal: "cena", foodId: pollo.id, qty: 200, unit: "g" }),
+  });
+  check("diary create con food 201", r.status === 201, r.status);
+  r = await fetch(`${BASE}/api/diary?day=${day}`, { headers: { Cookie: cA } });
+  d = await r.json();
+  check("totales incluyen pollo 330 kcal", d.totals.kcal === 330 && d.totals.protein === 62, d.totals);
+  check("keto verdict calculado", typeof d.keto?.verdict === "string", d.keto);
+}
+
+// 5. PATCH + historial + aislamiento
+r = await fetch(`${BASE}/api/diary/${entryId}`, {
+  method: "PATCH", headers: H(cA), body: JSON.stringify({ qty: 250 }),
+});
+check("PATCH propio ok", r.status === 200, r.status);
+r = await fetch(`${BASE}/api/diary/${entryId}`, {
+  method: "PATCH", headers: H(cB), body: JSON.stringify({ qty: 1 }),
+});
+check("PATCH ajeno 404", r.status === 404, r.status);
+r = await fetch(`${BASE}/api/diary/${entryId}`, { method: "DELETE", headers: { Cookie: cB } });
+check("DELETE ajeno 404", r.status === 404, r.status);
+r = await fetch(`${BASE}/api/diary?day=${day}`, { headers: { Cookie: cB } });
+d = await r.json();
+check("B no ve entradas de A", d.entries.length === 0, d.entries.length);
+r = await fetch(`${BASE}/api/diary/${entryId}`, { method: "DELETE", headers: { Cookie: cA } });
+check("DELETE propio ok", r.status === 200, r.status);
+
+// 6. Peso
+r = await fetch(`${BASE}/api/weight`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ weightKg: 80.5 }),
+});
+check("weight create 201", r.status === 201, r.status);
+r = await fetch(`${BASE}/api/weight`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ weightKg: 5 }),
+});
+check("weight absurdo 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/weight`, { headers: { Cookie: cA } });
+d = await r.json();
+check("weight lista 1", d.weights.length === 1, d.weights.length);
+
+// 7. Auditoría en DB (dev): ediciones + deletes + registros quedaron trazados
+const sql = postgres(process.env.DATABASE_URL!);
+const edits = await sql`select count(*)::int as n from entry_edits where entry_id = ${entryId}`;
+const audits = await sql`select action, count(*)::int as n from audit_log group by action`;
+await sql.end();
+check("entry_edits tiene el PATCH", edits[0].n >= 1, edits);
+const kinds: Record<string, number> = {};
+for (const a of audits) kinds[String(a.action)] = Number(a.n);
+check("audit: register x2 + diary-delete x1", kinds.register >= 2 && kinds["diary-delete"] >= 1, kinds);
+
+console.log(`\n${pass} ok, ${fail} fallos`);
+process.exit(fail > 0 ? 1 : 0);

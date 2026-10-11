@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-fitordie}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # solo dev local; en prod el .env decide
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-fitordie}"]
       interval: 10s

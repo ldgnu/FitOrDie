@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { auditLog, profiles, users } from "@/db/schema";
+import { clientIp, rateLimit } from "@/lib/ratelimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,6 +15,11 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
+  if (!rateLimit(`register:${clientIp(req)}`, 10))
+    return NextResponse.json(
+      { error: "Demasiados intentos, probá en un minuto." },
+      { status: 429 },
+    );
   const email = String(body.email ?? "").toLowerCase().trim();
   const password = String(body.password ?? "");
   const name = String(body.name ?? "").trim() || null;

@@ -1,69 +1,100 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="mx-auto w-full max-w-2xl px-5 pb-16 pt-10">
+      <p className="text-sm tracking-wide text-oliva">FITORDIE</p>
+      <h1 className="mt-2 font-display text-4xl leading-tight">
+        Tu alimentación, sin mentiras.
+      </h1>
+      <p className="mt-4 text-lg leading-relaxed">
+        Registrá qué comés, calculá nutrientes y enterate la verdad: si venís
+        bien, te motiva. Si te escondés, te reta. Sin humo en ninguna
+        dirección.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        {session?.user ? (
+          <Link
+            href="/dashboard"
+            className="rounded bg-tinta px-5 py-3 text-center text-crema"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Entrar a mi día
+          </Link>
+        ) : (
+          <>
+            <Link
+              href="/register"
+              className="rounded bg-tinta px-5 py-3 text-center text-crema"
+            >
+              Crear cuenta
+            </Link>
+            <Link
+              href="/login"
+              className="rounded border border-tinta/30 px-5 py-3 text-center"
+            >
+              Entrar
+            </Link>
+          </>
+        )}
+      </div>
+
+      <section className="mt-12">
+        <h2 className="font-display text-2xl">Cómo funciona</h2>
+        <ol className="mt-4 space-y-4">
+          <li>
+            <strong>1. Anotás.</strong> Qué comiste, cuánto y a qué hora. En
+            segundos, desde el celu.
+          </li>
+          <li>
+            <strong>2. Calcula.</strong> Calorías, proteínas, grasas, carbos y
+            carbos netos. Con fuentes, sin inventar.
+          </li>
+          <li>
+            <strong>3. Te dice la verdad.</strong> Compatible con tu objetivo
+            o no. Y si no registrás, también te lo dice.
+          </li>
+        </ol>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="font-display text-2xl">Preguntas de verdad</h2>
+        <div className="mt-4 space-y-4">
+          <div>
+            <strong>¿Es solo para keto?</strong>
+            <p>
+              No. Keto es una evaluación orientativa más. La app sirve para
+              cualquier objetivo.
+            </p>
+          </div>
+          <div>
+            <strong>¿Mis datos son privados?</strong>
+            <p>
+              Sí. Tu diario, peso y fotos son privados por defecto. Nada se
+              indexa ni se comparte.
+            </p>
+          </div>
+          <div>
+            <strong>¿Cuánto sale?</strong>
+            <p>Nada, por ahora. Sin pagos ni publicidad en esta versión.</p>
+          </div>
+          <div>
+            <strong>¿Esto es consejo médico?</strong>
+            <p>
+              No. Son estimaciones ajustables, no indicaciones médicas. Ante
+              dudas, profesional de la salud.
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <footer className="mt-12 border-t border-tinta/15 pt-4 text-sm text-tinta/70">
+        FitOrDie — comer bien puede ser práctico, rico y sostenible.
+      </footer>
+    </main>
   );
 }
