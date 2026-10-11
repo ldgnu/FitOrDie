@@ -8,7 +8,6 @@ import { users } from "./db/schema";
 // Auth real: credentials (email+password) con sesiones JWT firmadas.
 // Passwords solo como hash bcrypt. Tablas accounts/sessions quedan para OAuth futuro.
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   providers: [
     Credentials({
