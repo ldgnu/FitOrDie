@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import ParseBox from "./parse-box";
 
 interface Nutrients {
   kcal: number;
@@ -182,6 +183,8 @@ export default function DiarioPage() {
         />
         <button onClick={() => shift(1)} className={btn}>→</button>
       </div>
+
+      <ParseBox onSaved={load} />
 
       {data && (
         <section className="mt-4 rounded border border-tinta/15 bg-white/50 p-4 text-sm">

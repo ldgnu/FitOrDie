@@ -196,6 +196,21 @@ r = await fetch(`${BASE}/api/diary/week`, { headers: { Cookie: cA } });
 const week = await r.json();
 check("week 7 días con hoy cargado", r.status === 200 && week.days.length === 7 && week.days[6].entries >= 1, week.days?.map((x: { entries: number }) => x.entries));
 
+// 7b. Parse de texto libre (A)
+r = await fetch(`${BASE}/api/diary/parse`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ text: "hoy desayune 4 huevos con una palta chica echa aderezo con aceite" }),
+});
+const pr = await r.json();
+check("parse 3 items + desayuno", r.status === 200 && pr.meal === "desayuno" && pr.items.length === 3, pr);
+check("parse huevo 200g", pr.items[0]?.qty === 200 && pr.items[0]?.unit === "g", pr.items[0]);
+check("parse palta 105g", pr.items[1]?.qty === 105, pr.items[1]);
+check("parse aceite asumido", (pr.items[2]?.assumed?.length ?? 0) > 0, pr.items[2]);
+r = await fetch(`${BASE}/api/diary/parse`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ text: "   " }),
+});
+check("parse vacío 400", r.status === 400, r.status);
+
 // 8. Auditoría en DB (dev): ediciones + deletes + registros quedaron trazados
 const sql = postgres(process.env.DATABASE_URL!);
 const edits = await sql`select count(*)::int as n from entry_edits where entry_id = ${entryId}`;
