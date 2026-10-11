@@ -6,7 +6,11 @@ import type { NextRequest } from "next/server";
 // La autorización real sigue en cada API (requireUser); esto solo redirige.
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/diario")) {
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/diario") ||
+    pathname.startsWith("/perfil")
+  ) {
     let token = null;
     try {
       token = await getToken({
@@ -26,5 +30,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/diario/:path*"],
+  matcher: ["/dashboard/:path*", "/diario/:path*", "/perfil/:path*"],
 };

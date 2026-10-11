@@ -161,7 +161,42 @@ r = await fetch(`${BASE}/api/weight`, { headers: { Cookie: cA } });
 d = await r.json();
 check("weight lista 1", d.weights.length === 1, d.weights.length);
 
-// 7. Auditoría en DB (dev): ediciones + deletes + registros quedaron trazados
+// 7. Recetario + perfil + semana (A)
+r = await fetch(`${BASE}/api/recipes`);
+let rec = await r.json();
+check("recipes público", r.status === 200 && rec.recipes.length >= 6, rec.recipes?.length);
+r = await fetch(`${BASE}/api/recipes?keto=1`);
+rec = await r.json();
+check("recipes keto=1 todos compatibles", rec.recipes.length > 0 && rec.recipes.every((x: { verdict: string }) => x.verdict === "compatible"));
+const tortilla = (await (await fetch(`${BASE}/api/recipes?q=tortilla`)).json()).recipes[0];
+check("recipes search tortilla", !!tortilla, tortilla?.title);
+r = await fetch(`${BASE}/api/recipes/${tortilla.id}`);
+const det = await r.json();
+check("recipe detail con ingredientes y porción", r.status === 200 && det.ingredients.length >= 2 && det.perPortion.kcal > 0, det);
+r = await fetch(`${BASE}/api/diary`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ consumedAt: new Date().toISOString(), meal: "cena", recipeId: tortilla.id, qty: 1, unit: "porción" }),
+});
+check("diary create desde receta 201", r.status === 201, r.status);
+r = await fetch(`${BASE}/api/profile`, { headers: { Cookie: cA } });
+check("profile propio 200", r.status === 200, r.status);
+r = await fetch(`${BASE}/api/profile`, {
+  method: "PATCH", headers: H(cA),
+  body: JSON.stringify({ kcalTarget: 2300, crudeza: "sin-filtro", dislikes: ["apio"] }),
+});
+let prof = await r.json();
+check("profile PATCH ok", r.status === 200 && prof.profile.kcalTarget === 2300 && prof.profile.crudeza === "sin-filtro", prof.profile);
+r = await fetch(`${BASE}/api/profile`, {
+  method: "PATCH", headers: H(cA), body: JSON.stringify({ kcalTarget: 50 }),
+});
+check("profile objetivo absurdo 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/profile`);
+check("profile sin auth 401", r.status === 401, r.status);
+r = await fetch(`${BASE}/api/diary/week`, { headers: { Cookie: cA } });
+const week = await r.json();
+check("week 7 días con hoy cargado", r.status === 200 && week.days.length === 7 && week.days[6].entries >= 1, week.days?.map((x: { entries: number }) => x.entries));
+
+// 8. Auditoría en DB (dev): ediciones + deletes + registros quedaron trazados
 const sql = postgres(process.env.DATABASE_URL!);
 const edits = await sql`select count(*)::int as n from entry_edits where entry_id = ${entryId}`;
 const audits = await sql`select action, count(*)::int as n from audit_log group by action`;

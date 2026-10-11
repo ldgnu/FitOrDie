@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { weights } from "@/db/schema";
 import { getDaySummary } from "@/lib/day-summary";
 import LogoutButton from "./logout-button";
+import WeekStrip from "./week-strip";
 
 export const dynamic = "force-dynamic";
 
@@ -54,10 +55,17 @@ export default async function Dashboard() {
         <p className="text-sm tracking-wide text-oliva">MI DÍA — {day}</p>
         <LogoutButton />
       </div>
+      <nav className="mt-3 flex gap-4 text-sm">
+        <Link href="/diario" className="underline">Diario</Link>
+        <Link href="/recetario" className="underline">Recetario</Link>
+        <Link href="/perfil" className="underline">Perfil</Link>
+      </nav>
 
       <p className="mt-3 border-l-4 border-terracota bg-beige/60 px-4 py-3 font-display text-xl">
         {testigo}
       </p>
+
+      <WeekStrip />
 
       <section className="mt-6 rounded border border-tinta/15 bg-white/50 p-4">
         <div className="flex items-baseline justify-between">

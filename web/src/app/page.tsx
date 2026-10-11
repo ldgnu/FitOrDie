@@ -43,6 +43,13 @@ export default async function Home() {
         )}
       </div>
 
+      <p className="mt-6 text-sm">
+        <Link href="/recetario" className="underline">
+          Ver el recetario
+        </Link>{" "}
+        sin registrarte.
+      </p>
+
       <section className="mt-12">
         <h2 className="font-display text-2xl">Cómo funciona</h2>
         <ol className="mt-4 space-y-4">
