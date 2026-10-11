@@ -1,0 +1,21 @@
+# Secretos y entorno — jamás commitear
+.env
+.env.*
+*.pem
+*.key
+*.p12
+secrets/
+
+# Deps y build
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# OS / editores
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
