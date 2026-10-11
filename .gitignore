@@ -19,3 +19,6 @@ coverage/
 *~
 .idea/
 .vscode/
+
+# loaders personales: jamás commitear
+web/scripts/load-*.mts
