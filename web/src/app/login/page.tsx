@@ -28,7 +28,7 @@ function Form() {
   }
 
   const input =
-    "w-full rounded border border-tinta/25 bg-white px-3 py-2 outline-none focus:border-terracota";
+    "w-full rounded border border-tinta/25 bg-panel px-3 py-2 outline-none focus:border-terracota";
 
   return (
     <form onSubmit={onSubmit} className="mt-6 space-y-4">

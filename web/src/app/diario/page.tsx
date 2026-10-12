@@ -52,7 +52,7 @@ const VERDICT_TXT: Record<string, string> = {
 
 const btn = "rounded bg-tinta px-4 py-2 text-sm text-crema disabled:opacity-60";
 const input =
-  "w-full rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "w-full rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 
 export default function DiarioPage() {
   const [day, setDay] = useState(() => new Date().toISOString().slice(0, 10));
@@ -75,19 +75,28 @@ export default function DiarioPage() {
   }, [day]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let alive = true;
+    (async () => {
+      const r = await fetch(`/api/diary?day=${day}`);
+      if (r.ok && alive) setData(await r.json());
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [day]);
 
   useEffect(() => {
-    if (q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    const query = q.trim();
+    if (query.length < 2) return;
+    let alive = true;
     const t = setTimeout(async () => {
-      const r = await fetch(`/api/foods?q=${encodeURIComponent(q)}`);
-      if (r.ok) setResults((await r.json()).foods);
+      const r = await fetch(`/api/foods?q=${encodeURIComponent(query)}`);
+      if (r.ok && alive) setResults((await r.json()).foods);
     }, 300);
-    return () => clearTimeout(t);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
   }, [q]);
 
   function shift(d: number) {
@@ -187,7 +196,7 @@ export default function DiarioPage() {
       <ParseBox onSaved={load} />
 
       {data && (
-        <section className="mt-4 rounded border border-tinta/15 bg-white/50 p-4 text-sm">
+        <section className="mt-4 rounded border border-tinta/15 bg-panel/50 p-4 text-sm">
           <p>
             <strong>{Math.round(data.totals.kcal)} kcal</strong> · P{" "}
             {Math.round(data.totals.protein)} · G{" "}
@@ -223,12 +232,12 @@ export default function DiarioPage() {
             </div>
           </div>
           <input
-            value={q} onChange={(e) => { setQ(e.target.value); setSel(null); }}
+            value={q} onChange={(e) => { const v = e.target.value; setQ(v); setSel(null); if (v.trim().length < 2) setResults([]); }}
             placeholder="Buscar alimento (ej: pollo)"
             className={input}
           />
           {results.length > 0 && !sel && (
-            <ul className="divide-y divide-tinta/10 rounded border border-tinta/15 bg-white">
+            <ul className="divide-y divide-tinta/10 rounded border border-tinta/15 bg-panel">
               {results.map((f) => (
                 <li key={f.id}>
                   <button
@@ -279,7 +288,7 @@ export default function DiarioPage() {
                     value={editQty[e.id] ?? String(e.qty)}
                     onChange={(ev) => setEditQty((s) => ({ ...s, [e.id]: ev.target.value }))}
                     inputMode="decimal" aria-label="Corregir cantidad"
-                    className="w-20 rounded border border-tinta/25 bg-white px-2 py-1 text-sm"
+                    className="w-20 rounded border border-tinta/25 bg-panel px-2 py-1 text-sm"
                   />
                   <button onClick={() => saveQty(e.id)} className="text-sm underline">corregir</button>
                   <button onClick={() => del(e.id)} className="text-sm underline">borrar</button>

@@ -130,7 +130,7 @@ export function parseMealText(
     let qty: number | null = null;
     const assumed: string[] = [];
 
-    let m = rest.match(/(\d+(?:[.,]\d+)?)\s*(g|gramos?|ml|cc)\b/);
+    const m = rest.match(/(\d+(?:[.,]\d+)?)\s*(g|gramos?|ml|cc)\b/);
     let explicitUnit: string | null = null;
     if (m) {
       qty = Number(m[1].replace(",", "."));

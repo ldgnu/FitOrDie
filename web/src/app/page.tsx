@@ -50,6 +50,13 @@ export default async function Home() {
         sin registrarte.
       </p>
 
+      <img
+        src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=70"
+        alt="Bowl de comida real"
+        loading="lazy"
+        className="mt-8 aspect-[16/10] w-full rounded object-cover"
+      />
+
       <section className="mt-12">
         <h2 className="font-display text-2xl">Cómo funciona</h2>
         <ol className="mt-4 space-y-4">

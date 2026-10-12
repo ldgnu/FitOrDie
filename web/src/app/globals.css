@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
+/* FitOrDie — tema oscuro editorial.
+   Los nombres de tokens se conservan para no romper componentes;
+   los valores apuntan a la paleta carbón/marfil. */
 @theme {
-  --color-crema: #f5f0e6;
-  --color-beige: #e7ddcc;
-  --color-oliva: #72785a;
-  --color-terracota: #b96f52;
-  --color-tinta: #39342d;
+  --color-crema: #171310; /* fondo página (carbón marrón) */
+  --color-beige: #262017; /* superficie suave */
+  --color-oliva: #a3ad7f; /* acento funcional (salvia) */
+  --color-terracota: #cf8261; /* detalles puntuales */
+  --color-tinta: #f0e7d3; /* texto principal (marfil) */
+  --color-panel: #221c14; /* tarjetas e inputs */
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -13,4 +17,41 @@
 body {
   background: var(--color-crema);
   color: var(--color-tinta);
+}
+
+::selection {
+  background: var(--color-terracota);
+  color: var(--color-crema);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-terracota);
+  outline-offset: 2px;
+}
+
+/* Controles nativos (date picker, etc.) en oscuro */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+/* Entrada discreta de página; se desactiva si el usuario pide menos movimiento */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+main {
+  animation: rise 0.25s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none;
+  }
 }

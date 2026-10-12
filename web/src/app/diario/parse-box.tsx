@@ -5,7 +5,7 @@ import type { ParseResult } from "@/lib/parse-food";
 
 const MEALS = ["desayuno", "media-manana", "almuerzo", "merienda", "cena", "snack"];
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 
 // Caja "escribilo": texto libre → preview con lo asumido → confirmar guarda.
 export default function ParseBox({ onSaved }: { onSaved: () => void }) {
@@ -84,7 +84,7 @@ export default function ParseBox({ onSaved }: { onSaved: () => void }) {
   }
 
   return (
-    <section className="mt-6 rounded border border-tinta/15 bg-white/50 p-4">
+    <section className="mt-6 rounded border border-tinta/15 bg-panel/50 p-4">
       <h2 className="font-display text-2xl">Escribilo como lo dirías</h2>
       <form onSubmit={interpretar} className="mt-2 space-y-2">
         <textarea
@@ -108,7 +108,7 @@ export default function ParseBox({ onSaved }: { onSaved: () => void }) {
             </select>
           </div>
           {res.items.map((it, i) => (
-            <div key={i} className="rounded border border-tinta/15 bg-crema p-2">
+            <div key={i} className="rounded border border-tinta/15 bg-panel p-2">
               <p>
                 <strong>{it.label}</strong> →{" "}
                 {it.kind === "custom"
@@ -139,7 +139,7 @@ export default function ParseBox({ onSaved }: { onSaved: () => void }) {
               <div className="mt-1 flex items-center gap-2">
                 <input
                   value={qty[i] ?? ""} onChange={(e) => setQty((s) => ({ ...s, [i]: e.target.value }))}
-                  inputMode="decimal" aria-label="Cantidad" className="w-24 rounded border border-tinta/25 bg-white px-2 py-1"
+                  inputMode="decimal" aria-label="Cantidad" className="w-24 rounded border border-tinta/25 bg-panel px-2 py-1"
                 />
                 <span>{it.unit}</span>
               </div>

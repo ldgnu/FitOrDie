@@ -14,7 +14,7 @@ interface Detail {
   recipe: {
     id: string; title: string; description: string | null; servings: number;
     minutes: number | null; difficulty: string | null; instructions: string;
-    storageTip: string | null;
+    storageTip: string | null; photoUrl: string | null;
   };
   ingredients: Ing[];
   perPortion: { kcal: number; protein: number; fat: number; carbs: number; fiber: number } | null;
@@ -24,7 +24,7 @@ interface Detail {
 
 const MEALS = ["desayuno", "media-manana", "almuerzo", "merienda", "cena", "snack"];
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 
 export default function RecetaPage() {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +76,14 @@ export default function RecetaPage() {
     <main className="mx-auto w-full max-w-2xl px-5 pb-16 pt-6">
       <Link href="/recetario" className="text-sm underline">← Recetario</Link>
       <h1 className="mt-2 font-display text-3xl">{d.recipe.title}</h1>
+      {d.recipe.photoUrl && (
+        <img
+          src={d.recipe.photoUrl}
+          alt={d.recipe.title}
+          loading="lazy"
+          className="mt-4 aspect-[16/10] w-full rounded object-cover"
+        />
+      )}
       {d.recipe.description && <p className="mt-2">{d.recipe.description}</p>}
       <p className="mt-1 text-sm text-tinta/70">
         {d.recipe.minutes ? `${d.recipe.minutes} min · ` : ""}

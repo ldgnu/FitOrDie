@@ -39,7 +39,7 @@ export default function RegisterPage() {
   }
 
   const input =
-    "w-full rounded border border-tinta/25 bg-white px-3 py-2 outline-none focus:border-terracota";
+    "w-full rounded border border-tinta/25 bg-panel px-3 py-2 outline-none focus:border-terracota";
 
   return (
     <main className="mx-auto w-full max-w-sm px-5 pb-16 pt-10">

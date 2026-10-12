@@ -37,6 +37,7 @@ export async function GET(req: Request) {
     out.push({
       id: r.id, title: r.title, description: r.description,
       servings: r.servings, minutes: r.minutes, difficulty: r.difficulty,
+      photoUrl: r.photoUrl,
       perPortion: per, netos, verdict,
     });
   }

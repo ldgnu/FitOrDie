@@ -67,7 +67,7 @@ export default async function Dashboard() {
 
       <WeekStrip />
 
-      <section className="mt-6 rounded border border-tinta/15 bg-white/50 p-4">
+      <section className="mt-6 rounded border border-tinta/15 bg-panel/50 p-4">
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-2xl">Calorías</h2>
           <p className="text-lg">
@@ -137,7 +137,7 @@ export default async function Dashboard() {
         </Link>
       </section>
 
-      <section className="mt-6 rounded border border-tinta/15 bg-white/50 p-4">
+      <section className="mt-6 rounded border border-tinta/15 bg-panel/50 p-4">
         <h2 className="font-display text-2xl">Peso</h2>
         {lastW === null ? (
           <p className="mt-2 text-sm">

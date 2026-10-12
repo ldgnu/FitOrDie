@@ -9,6 +9,7 @@ interface R {
   description: string | null;
   minutes: number | null;
   difficulty: string | null;
+  photoUrl: string | null;
   netos: number | null;
   verdict: string;
 }
@@ -21,7 +22,7 @@ const VERDICT_TXT: Record<string, string> = {
 };
 
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 
 export default function RecetarioPage() {
   const [q, setQ] = useState("");
@@ -74,7 +75,16 @@ export default function RecetarioPage() {
 
       <ul className="mt-4 divide-y divide-tinta/10">
         {list.map((r) => (
-          <li key={r.id} className="py-3">
+          <li key={r.id} className="flex gap-3 py-3">
+            {r.photoUrl && (
+              <img
+                src={r.photoUrl}
+                alt=""
+                loading="lazy"
+                className="h-16 w-16 shrink-0 rounded object-cover"
+              />
+            )}
+            <div>
             <Link href={`/recetario/${r.id}`} className="font-display text-xl underline">
               {r.title}
             </Link>
@@ -85,6 +95,7 @@ export default function RecetarioPage() {
               {r.netos !== null ? `${r.netos} g netos` : "sin datos"} ·{" "}
               <strong>{VERDICT_TXT[r.verdict]}</strong>
             </p>
+            </div>
           </li>
         ))}
       </ul>
