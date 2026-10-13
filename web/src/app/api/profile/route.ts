@@ -74,6 +74,25 @@ export async function PATCH(req: Request) {
     }
   }
 
+  const weightKg = num(body.weightKg, 20, 400);
+  const heightCm = num(body.heightCm, 100, 250);
+  const age = num(body.age, 10, 120);
+  if (weightKg === null || heightCm === null || age === null)
+    return NextResponse.json({ error: "Medidas fuera de rango" }, { status: 400 });
+  if (weightKg !== undefined) patch.weightKg = String(weightKg);
+  if (heightCm !== undefined) patch.heightCm = heightCm;
+  if (age !== undefined) patch.age = age;
+  for (const k of ["sex", "actividad", "objetivo"] as const) {
+    if (body[k] === undefined) continue;
+    const v = String(body[k] ?? "");
+    if (
+      v !== "" &&
+      !["m", "f", "sedentario", "ligero", "moderado", "intenso", "bajar", "mantener", "subir"].includes(v)
+    )
+      return NextResponse.json({ error: `${k} inválido` }, { status: 400 });
+    (patch as Record<string, unknown>)[k] = v || null;
+  }
+
   if (Object.keys(patch).length === 0)
     return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
 

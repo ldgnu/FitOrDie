@@ -80,6 +80,12 @@ export const profiles = pgTable("profiles", {
   allergies: text("allergies").array(),
   dislikes: text("dislikes").array(),
   notes: text("notes"), // objetivos, horarios, contexto libre
+  weightKg: numeric("weight_kg"),
+  heightCm: integer("height_cm"),
+  age: integer("age"),
+  sex: text("sex"), // m | f
+  actividad: text("actividad"), // sedentario | ligero | moderado | intenso
+  objetivo: text("objetivo"), // bajar | mantener | subir
 });
 
 // ---------- Alimentos y recetas ----------

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { sugerir, rangoSaludable, type Sugerencia } from "@/lib/targets";
+
 interface Profile {
   displayName: string | null;
   units: string;
@@ -15,11 +17,70 @@ interface Profile {
   allergies: string[] | null;
   dislikes: string[] | null;
   notes: string | null;
+  weightKg: string | number | null;
+  heightCm: number | null;
+  age: number | null;
+  sex: string | null;
+  actividad: string | null;
+  objetivo: string | null;
 }
 
 const input =
   "w-full rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 const csv = (a: string[] | null) => (a ?? []).join(", ");
+
+function SugerenciaBox({
+  f,
+  onAplicar,
+}: {
+  f: { weightKg: string; heightCm: string; age: string; sex: string; actividad: string; objetivo: string; prefs: string };
+  onAplicar: (s: Sugerencia) => void;
+}) {
+  const kg = Number(f.weightKg);
+  const cm = Number(f.heightCm);
+  const edad = Number(f.age);
+  const okSex = f.sex === "m" || f.sex === "f";
+  const okAct = ["sedentario", "ligero", "moderado", "intenso"].includes(f.actividad);
+  const okObj = ["bajar", "mantener", "subir"].includes(f.objetivo);
+  if (!Number.isFinite(kg) || !Number.isFinite(cm) || !Number.isFinite(edad) || !okSex || !okAct || !okObj) {
+    return (
+      <p className="text-sm text-tinta/70">
+        Completá peso, altura, edad, sexo, actividad y objetivo para ver tu cálculo.
+      </p>
+    );
+  }
+  const keto = f.prefs.split(",").map((x) => x.trim()).includes("keto");
+  const s = sugerir({
+    sexo: f.sex as "m" | "f",
+    kg, cm, edad,
+    actividad: f.actividad as "sedentario" | "ligero" | "moderado" | "intenso",
+    objetivo: f.objetivo as "bajar" | "mantener" | "subir",
+    keto,
+  });
+  const rango = rangoSaludable(cm);
+  return (
+    <div className="rounded border border-oliva/40 bg-beige/40 p-3 text-sm">
+      <p>
+        Tu IMC: <strong>{s.imcActual}</strong> · rango saludable para tu altura:{" "}
+        <strong>{rango.min}–{rango.max} kg</strong> (actual: <strong>{kg} kg</strong>)
+      </p>
+      <p className="mt-1">
+        Quemás en reposo ~<strong>{s.tmb}</strong> y en total ~<strong>{s.tdee}</strong> kcal/día.
+      </p>
+      <p className="mt-1">
+        Sugerencia ({f.objetivo}): <strong>{s.kcal} kcal</strong> · P {s.proteina} g ·
+        netos {s.netos} g · G {s.grasa} g.
+      </p>
+      <button
+        type="button"
+        onClick={() => onAplicar(s)}
+        className="mt-2 rounded bg-oliva px-4 py-2 text-crema"
+      >
+        Usar estos números
+      </button>
+    </div>
+  );
+}
 
 export default function PerfilPage() {
   const [p, setP] = useState<Profile | null>(null);
@@ -29,6 +90,7 @@ export default function PerfilPage() {
     displayName: "", kcalTarget: "", proteinTarget: "", netCarbTarget: "",
     crudeza: "picante", units: "metric", timezone: "",
     prefs: "", allergies: "", dislikes: "",
+    weightKg: "", heightCm: "", age: "", sex: "", actividad: "", objetivo: "bajar",
   });
 
   useEffect(() => {
@@ -48,6 +110,12 @@ export default function PerfilPage() {
         prefs: csv(profile.prefs),
         allergies: csv(profile.allergies),
         dislikes: csv(profile.dislikes),
+        weightKg: profile.weightKg?.toString() ?? "",
+        heightCm: profile.heightCm?.toString() ?? "",
+        age: profile.age?.toString() ?? "",
+        sex: profile.sex ?? "",
+        actividad: profile.actividad ?? "",
+        objetivo: profile.objetivo ?? "bajar",
       });
     });
   }, []);
@@ -72,6 +140,12 @@ export default function PerfilPage() {
         prefs: split(f.prefs),
         allergies: split(f.allergies),
         dislikes: split(f.dislikes),
+        weightKg: f.weightKg ? Number(f.weightKg) : null,
+        heightCm: f.heightCm ? Number(f.heightCm) : null,
+        age: f.age ? Number(f.age) : null,
+        sex: f.sex || undefined,
+        actividad: f.actividad || undefined,
+        objetivo: f.objetivo || undefined,
       }),
     });
     setBusy(false);
@@ -98,6 +172,61 @@ export default function PerfilPage() {
           <label className="text-sm">Nombre visible</label>
           <input className={input} {...set("displayName")} />
         </div>
+        <h2 className="font-display text-2xl">Mi cuerpo</h2>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-sm">Peso kg</label>
+            <input className={input} inputMode="decimal" {...set("weightKg")} />
+          </div>
+          <div>
+            <label className="text-sm">Altura cm</label>
+            <input className={input} inputMode="numeric" {...set("heightCm")} />
+          </div>
+          <div>
+            <label className="text-sm">Edad</label>
+            <input className={input} inputMode="numeric" {...set("age")} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-sm">Sexo</label>
+            <select className={input} {...set("sex")}>
+              <option value="">—</option>
+              <option value="m">Masculino</option>
+              <option value="f">Femenino</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm">Actividad</label>
+            <select className={input} {...set("actividad")}>
+              <option value="">—</option>
+              <option value="sedentario">Poco/nada</option>
+              <option value="ligero">Ligera</option>
+              <option value="moderado">Moderada 3-5x</option>
+              <option value="intenso">Intensa 6-7x</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm">Objetivo</label>
+            <select className={input} {...set("objetivo")}>
+              <option value="bajar">Bajar</option>
+              <option value="mantener">Mantener</option>
+              <option value="subir">Subir</option>
+            </select>
+          </div>
+        </div>
+        <SugerenciaBox
+          f={f}
+          onAplicar={(s) =>
+            setF((prev) => ({
+              ...prev,
+              kcalTarget: String(s.kcal),
+              proteinTarget: String(s.proteina),
+              netCarbTarget: String(s.netos),
+            }))
+          }
+        />
+        <h2 className="font-display text-2xl">Objetivos diarios</h2>
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="text-sm">Kcal/día</label>

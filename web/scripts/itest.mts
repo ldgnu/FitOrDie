@@ -192,6 +192,16 @@ r = await fetch(`${BASE}/api/profile`, {
   method: "PATCH", headers: H(cA), body: JSON.stringify({ kcalTarget: 50 }),
 });
 check("profile objetivo absurdo 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/profile`, {
+  method: "PATCH", headers: H(cA),
+  body: JSON.stringify({ weightKg: 89.65, heightCm: 185, age: 38, sex: "m", actividad: "moderado", objetivo: "bajar" }),
+});
+prof = await r.json();
+check("profile cuerpo ok", r.status === 200 && prof.profile.heightCm === 185, prof.profile);
+r = await fetch(`${BASE}/api/profile`, {
+  method: "PATCH", headers: H(cA), body: JSON.stringify({ weightKg: 5 }),
+});
+check("profile peso absurdo 400", r.status === 400, r.status);
 r = await fetch(`${BASE}/api/profile`);
 check("profile sin auth 401", r.status === 401, r.status);
 r = await fetch(`${BASE}/api/diary/week`, { headers: { Cookie: cA } });
