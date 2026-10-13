@@ -9,7 +9,8 @@ export async function proxy(req: NextRequest) {
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/diario") ||
-    pathname.startsWith("/perfil")
+    pathname.startsWith("/perfil") ||
+    pathname.startsWith("/progreso")
   ) {
     let token = null;
     try {
@@ -30,5 +31,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/diario/:path*", "/perfil/:path*"],
+  matcher: ["/dashboard/:path*", "/diario/:path*", "/perfil/:path*", "/progreso/:path*"],
 };

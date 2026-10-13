@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import AppNav from "./app-nav";
 
 const display = Fraunces({ variable: "--font-display", subsets: ["latin"] });
 const body = Inter({ variable: "--font-body", subsets: ["latin"] });
@@ -25,7 +26,10 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-crema font-body text-tinta antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <AppNav />
+        </Providers>
       </body>
     </html>
   );

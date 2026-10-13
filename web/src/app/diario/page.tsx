@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import ParseBox from "./parse-box";
 
 interface Nutrients {
@@ -54,14 +55,18 @@ const btn = "rounded bg-tinta px-4 py-2 text-sm text-crema disabled:opacity-60";
 const input =
   "w-full rounded border border-tinta/25 bg-panel px-3 py-2 text-sm outline-none focus:border-terracota";
 
-export default function DiarioPage() {
+function DiarioInner() {
+  const sp = useSearchParams();
+  const param = sp.get("meal");
   const [day, setDay] = useState(() => new Date().toISOString().slice(0, 10));
   const [data, setData] = useState<DayData | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Food[]>([]);
   const [sel, setSel] = useState<Food | null>(null);
-  const [meal, setMeal] = useState("almuerzo");
+  const [meal, setMeal] = useState(
+    param && MEALS.some((x) => x.v === param) ? param : "almuerzo",
+  );
   const [qty, setQty] = useState("150");
   const [unit, setUnit] = useState("g");
   const [customName, setCustomName] = useState("");
@@ -311,5 +316,13 @@ export default function DiarioPage() {
         </form>
       </section>
     </main>
+  );
+}
+
+export default function DiarioPage() {
+  return (
+    <Suspense fallback={<main className="mx-auto w-full max-w-2xl p-5">Cargando…</main>}>
+      <DiarioInner />
+    </Suspense>
   );
 }

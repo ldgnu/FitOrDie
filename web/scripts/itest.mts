@@ -54,6 +54,8 @@ const day = new Date().toISOString().slice(0, 10);
 check("landing 200", (await fetch(`${BASE}/`)).status === 200);
 const dashNoAuth = await fetch(`${BASE}/dashboard`, { redirect: "manual" });
 check("dashboard sin auth redirige a login", [307, 308].includes(dashNoAuth.status));
+const progNoAuth = await fetch(`${BASE}/progreso`, { redirect: "manual" });
+check("progreso sin auth redirige a login", [307, 308].includes(progNoAuth.status));
 check("diary sin auth 401", (await fetch(`${BASE}/api/diary`)).status === 401);
 check(
   "diary POST sin auth 401",

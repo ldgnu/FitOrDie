@@ -4,158 +4,215 @@ import { getServerSession } from "next-auth";
 import { desc, eq } from "drizzle-orm";
 import { authOptions } from "@/auth";
 import { db } from "@/db";
-import { weights } from "@/db/schema";
+import { recipes, weights } from "@/db/schema";
 import { getDaySummary } from "@/lib/day-summary";
 import LogoutButton from "./logout-button";
 import WeekStrip from "./week-strip";
 
 export const dynamic = "force-dynamic";
 
-const VERDICT_TXT: Record<string, string> = {
-  compatible: "Compatible con tu objetivo keto.",
-  "con-ajustes": "Va con ajustes: ojo con las porciones.",
-  dificil: "Difícil de encajar hoy.",
-  "sin-datos": "Sin datos suficientes para evaluar.",
-};
+const MEAL_SLOTS = [
+  { v: "desayuno", label: "Desayuno", hora: "9:00", desde: 5, hasta: 10 },
+  { v: "almuerzo", label: "Almuerzo", hora: "13:00", desde: 10, hasta: 15 },
+  { v: "merienda", label: "Merienda", hora: "18:00", desde: 15, hasta: 20 },
+  { v: "cena", label: "Cena", hora: "22:00", desde: 20, hasta: 24 },
+] as const;
+
+const ESCALONES = [85, 82, 80];
+
+function Bar({ pct, color }: { pct: number; color: string }) {
+  return (
+    <div className="mt-1 h-2 rounded bg-tinta/10">
+      <div className={`h-2 rounded ${color}`} style={{ width: `${Math.min(100, pct)}%` }} />
+    </div>
+  );
+}
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/login");
+  const userId = session.user.id;
 
-  const day = new Date().toISOString().slice(0, 10);
-  const s = await getDaySummary(session.user.id, day);
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  const hour = now.getHours();
+  const saludo = hour < 12 ? "Buen día" : hour < 20 ? "Buenas tardes" : "Buenas noches";
+  const actual = MEAL_SLOTS.find((m) => hour >= m.desde && hour < m.hasta) ?? MEAL_SLOTS[0];
+
+  const s = await getDaySummary(userId, day);
   const wl = await db
     .select()
     .from(weights)
-    .where(eq(weights.userId, session.user.id))
+    .where(eq(weights.userId, userId))
     .orderBy(desc(weights.measuredAt))
     .limit(2);
   const lastW = wl[0] ? Number(wl[0].weightKg) : null;
-  const trend =
-    wl.length === 2
-      ? Math.round((Number(wl[0].weightKg) - Number(wl[1].weightKg)) * 10) / 10
-      : null;
+  const nextEscalon = lastW === null ? null : ESCALONES.find((e) => lastW > e) ?? null;
+
+  const allRecipes = await db
+    .select({ id: recipes.id, title: recipes.title, photoUrl: recipes.photoUrl })
+    .from(recipes)
+    .where(eq(recipes.isPublic, true));
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000,
+  );
+  const recetaDia = allRecipes.length > 0 ? allRecipes[dayOfYear % allRecipes.length] : null;
 
   const testigo =
     s.entries.length === 0
-      ? "Hoy todavía no anotaste nada. El dato no muerde: arrancá con lo que comiste."
+      ? actual.v === "desayuno"
+        ? "Arrancá el día anotando el desayuno. Ni el mate zafa del registro."
+        : `Todavía no hay nada hoy. El dato no muerde: arrancá con ${actual.label.toLowerCase()}.`
       : s.kcalTarget && s.totals.kcal > s.kcalTarget
         ? "Te pasaste del objetivo. Anotá la verdad y seguí: esconderse no sirve."
         : s.keto.verdict === "compatible"
           ? "Venís bien. Mañana repetilo."
           : "Vas tirando. Revisá los netos antes de la próxima comida.";
 
-  const pct = s.kcalTarget
-    ? Math.min(100, Math.round((s.totals.kcal / s.kcalTarget) * 100))
-    : null;
+  const restan = s.kcalTarget !== null ? s.kcalTarget - Math.round(s.totals.kcal) : null;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pb-16 pt-6">
+    <main className="mx-auto w-full max-w-2xl px-5 pb-8 pt-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm tracking-wide text-oliva">MI DÍA — {day}</p>
+        <p className="text-sm tracking-wide text-oliva">
+          {saludo.toUpperCase()} — {day}
+        </p>
         <LogoutButton />
       </div>
-      <nav className="mt-3 flex gap-4 text-sm">
-        <Link href="/diario" className="underline">Diario</Link>
-        <Link href="/recetario" className="underline">Recetario</Link>
-        <Link href="/perfil" className="underline">Perfil</Link>
-      </nav>
 
       <p className="mt-3 border-l-4 border-terracota bg-beige/60 px-4 py-3 font-display text-xl">
         {testigo}
       </p>
 
-      <WeekStrip />
+      {/* Próxima comida */}
+      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-tinta/70">Ahora toca</p>
+            <p className="font-display text-2xl">
+              {actual.label} <span className="text-base text-tinta/60">{actual.hora}</span>
+            </p>
+          </div>
+          <Link
+            href={`/diario?meal=${actual.v}`}
+            className="rounded bg-terracota px-5 py-3 font-bold text-crema"
+          >
+            + Anotar
+          </Link>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {MEAL_SLOTS.filter((m) => m.v !== actual.v).map((m) => (
+            <Link
+              key={m.v}
+              href={`/diario?meal=${m.v}`}
+              className="rounded border border-tinta/25 px-2 py-2 text-center text-sm"
+            >
+              {m.label}
+              <span className="block text-xs text-tinta/60">{m.hora}</span>
+            </Link>
+          ))}
+          <Link
+            href="/diario?meal=snack"
+            className="rounded border border-tinta/25 px-2 py-2 text-center text-sm"
+          >
+            Snack
+            <span className="block text-xs text-tinta/60">antojo</span>
+          </Link>
+        </div>
+      </section>
 
-      <section className="mt-6 rounded border border-tinta/15 bg-panel/50 p-4">
+      {/* Macros */}
+      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-2xl">Calorías</h2>
+          <h2 className="font-display text-2xl">Hoy</h2>
           <p className="text-lg">
             <strong>{Math.round(s.totals.kcal)}</strong>
-            {s.kcalTarget ? ` / ${s.kcalTarget}` : " kcal"}
+            {s.kcalTarget ? (
+              <span className={restan !== null && restan < 0 ? "text-terracota" : "text-tinta/70"}>
+                {" "}
+                / {restan !== null && restan >= 0 ? `faltan ${restan}` : `pasado por ${restan !== null ? -restan : "?"}`}
+              </span>
+            ) : (
+              " kcal"
+            )}
           </p>
         </div>
-        {pct !== null && (
-          <div className="mt-2 h-2 rounded bg-tinta/10">
-            <div
-              className="h-2 rounded bg-oliva"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
+        {s.kcalTarget && (
+          <Bar pct={(s.totals.kcal / s.kcalTarget) * 100} color="bg-oliva" />
         )}
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
-          <div className="rounded bg-beige/60 p-2">
-            <p className="font-bold">{Math.round(s.totals.protein)} g</p>
-            <p>proteínas{s.proteinTarget ? ` / ${s.proteinTarget}` : ""}</p>
+        <div className="mt-3 space-y-2 text-sm">
+          <div>
+            <div className="flex justify-between">
+              <span>Proteína{s.proteinTarget ? ` / ${s.proteinTarget} g` : ""}</span>
+              <strong>{Math.round(s.totals.protein)} g</strong>
+            </div>
+            {s.proteinTarget && <Bar pct={(s.totals.protein / s.proteinTarget) * 100} color="bg-terracota" />}
           </div>
-          <div className="rounded bg-beige/60 p-2">
-            <p className="font-bold">{Math.round(s.totals.fat)} g</p>
-            <p>grasas</p>
+          <div className="flex justify-between">
+            <span>Grasas</span>
+            <strong>{Math.round(s.totals.fat)} g</strong>
           </div>
-          <div className="rounded bg-beige/60 p-2">
-            <p className="font-bold">{Math.round(s.totals.carbs)} g</p>
-            <p>carbos</p>
+          <div className="flex justify-between">
+            <span>Netos (obj {s.keto.objetivo} g)</span>
+            <strong>{s.keto.netos ?? "—"} g · {s.keto.verdict}</strong>
           </div>
         </div>
-        <p className="mt-3 text-sm">
-          Netos: <strong>{s.keto.netos ?? "—"} g</strong> (objetivo{" "}
-          {s.keto.objetivo} g) — {VERDICT_TXT[s.keto.verdict]}
-        </p>
         {s.partial && (
-          <p className="mt-1 text-sm text-terracota">
-            Algunas entradas no tienen datos completos: el total es parcial.
+          <p className="mt-2 text-sm text-terracota">
+            Total parcial: hay entradas sin datos completos.
           </p>
         )}
       </section>
 
-      <section className="mt-6">
-        <h2 className="font-display text-2xl">Comidas de hoy</h2>
-        {s.entries.length === 0 ? (
-          <p className="mt-2">Nada registrado todavía.</p>
-        ) : (
-          <ul className="mt-2 divide-y divide-tinta/10">
-            {s.entries.map((e) => (
-              <li key={e.id} className="py-2 text-sm">
-                <strong>{e.meal}</strong> — {e.label} ({e.qty} {e.unit})
-                {e.nutrients ? (
-                  <span className="text-tinta/70">
-                    {" "}
-                    · {Math.round(e.nutrients.kcal)} kcal
-                  </span>
-                ) : (
-                  <span className="text-terracota"> · sin datos</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        <Link
-          href="/diario"
-          className="mt-3 inline-block rounded bg-tinta px-5 py-3 text-crema"
-        >
-          Anotar comida
-        </Link>
-      </section>
+      {/* Receta del día */}
+      {recetaDia && (
+        <section className="mt-4 overflow-hidden rounded border border-tinta/15 bg-panel">
+          <div className="flex items-center gap-3 p-4">
+            {recetaDia.photoUrl && (
+              <img
+                src={recetaDia.photoUrl}
+                alt=""
+                loading="lazy"
+                className="h-16 w-16 shrink-0 rounded object-cover"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm text-tinta/70">Receta del día</p>
+              <Link href={`/recetario/${recetaDia.id}`} className="font-display text-xl underline">
+                {recetaDia.title}
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="mt-6 rounded border border-tinta/15 bg-panel/50 p-4">
-        <h2 className="font-display text-2xl">Peso</h2>
+      {/* Peso + escalón */}
+      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-2xl">Peso</h2>
+          <Link href="/progreso" className="text-sm underline">
+            Ver progreso
+          </Link>
+        </div>
         {lastW === null ? (
-          <p className="mt-2 text-sm">
-            Sin registros. Anotá el primero en el diario.
-          </p>
+          <p className="mt-2 text-sm">Sin registros. Anotá el primero.</p>
         ) : (
           <p className="mt-2 text-lg">
             <strong>{lastW} kg</strong>
-            {trend !== null && (
-              <span className="text-sm">
+            {nextEscalon !== null && nextEscalon !== undefined && (
+              <span className="text-sm text-tinta/70">
                 {" "}
-                ({trend > 0 ? "+" : ""}
-                {trend} kg vs anterior)
+                · faltan {Math.round((lastW - nextEscalon) * 10) / 10} para los {nextEscalon}
               </span>
+            )}
+            {nextEscalon === null && (
+              <span className="text-sm text-oliva"> · escalones cumplidos</span>
             )}
           </p>
         )}
       </section>
+
+      <WeekStrip />
     </main>
   );
 }
