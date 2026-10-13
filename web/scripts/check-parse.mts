@@ -11,6 +11,7 @@ const REFS: FoodRef[] = [
   { id: "qc", name: "Queso crema", kind: "food" },
   { id: "qcr", name: "Queso cremoso", kind: "food" },
   { id: "mila", name: "Milanesa keto de pollo", kind: "recipe" },
+  { id: "mate", name: "Mate", kind: "food" },
 ];
 
 let failures = 0;
@@ -57,6 +58,21 @@ eq("receta por nombre", (() => {
 })(), ["recipe", 1, "porción"]);
 
 eq("vacío 400-like", parseMealText("   ", REFS, "2026-10-11").questions.length > 0, true);
+
+eq("multilinea de Javi", (() => {
+  const x = parseMealText("4 huevos revueltos\n60 gr de queso cremoso\nmate", REFS, "2026-10-11");
+  return [
+    x.items.length,
+    x.items[0]?.qty, x.items[0]?.foodId,
+    x.items[1]?.qty, x.items[1]?.unit,
+    x.items[2]?.qty, x.items[2]?.unit,
+  ];
+})(), [3, 200, "huevo", 60, "g", 500, "ml"]);
+
+eq("cucharada", (() => {
+  const x = parseMealText("1 cda de aceite", REFS, "2026-10-11");
+  return [x.items[0]?.qty, x.items[0]?.unit];
+})(), [15, "g"]);
 
 if (failures > 0) {
   console.error(`${failures} checks fallaron`);

@@ -53,6 +53,15 @@ const NOISE = new Set([
   "grande", "mediana", "mediano", "chica", "chico",
 ]);
 
+// Formas de preparación: sirven en la etiqueta, sobran para matchear.
+const PREP = new Set([
+  "revuelto", "revueltos", "revuelta", "revueltas", "frito", "fritos",
+  "frita", "fritas", "duro", "duros", "dura", "duras", "hervido", "hervidos",
+  "hervida", "hervidas", "plancha", "salteado", "salteados", "salteada",
+  "salteadas", "cocido", "cocidos", "cocida", "cocidas", "crudo", "cruda",
+  "rallado", "rallada", "tostado", "tostada", "horno", "vapor",
+]);
+
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -120,7 +129,7 @@ export function parseMealText(
   // "no X" = lo nombró para excluirlo → se saca
   t = t.replace(/\bno\b[^,+.]+/g, " ");
   const parts = t
-    .split(/[,+]|\s*\b(?:con|y|e|mas)\b\s*/g)
+    .split(/[,+;\n]|\s*\b(?:con|y|e|mas)\b\s*/g)
     .map((p) => p.trim())
     .filter(Boolean);
 
@@ -130,12 +139,36 @@ export function parseMealText(
     let qty: number | null = null;
     const assumed: string[] = [];
 
-    const m = rest.match(/(\d+(?:[.,]\d+)?)\s*(g|gramos?|ml|cc)\b/);
+    const m = rest.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|grs?|gs|gramos?|ml|cc|l|lt|litros?)\b/);
     let explicitUnit: string | null = null;
     if (m) {
-      qty = Number(m[1].replace(",", "."));
-      explicitUnit = m[2].startsWith("g") ? "g" : "ml";
+      let q = Number(m[1].replace(",", "."));
+      const u = m[2];
+      if (u === "kg") {
+        q *= 1000;
+        explicitUnit = "g";
+      } else if (u === "l" || u === "lt" || u.startsWith("litro")) {
+        q *= 1000;
+        explicitUnit = "ml";
+      } else explicitUnit = u.startsWith("g") ? "g" : "ml";
+      qty = q;
       rest = rest.replace(m[0], " ");
+    }
+    if (qty === null) {
+      const sp = rest.match(/(\d+(?:[.,]\d+)?)\s*(tazas?|cdas?|cucharadas?|cditas?|cucharaditas?)\b/);
+      if (sp) {
+        const base = Number(sp[1].replace(",", "."));
+        const w = sp[2];
+        const mult = w.startsWith("taza")
+          ? 200
+          : w.startsWith("cdita") || w.startsWith("cucharadita")
+            ? 5
+            : 15;
+        qty = base * mult;
+        explicitUnit = "g";
+        assumed.push(`Medida casera: ${sp[0].trim()} ≈ ${qty} g (corregila si no es)`);
+        rest = rest.replace(sp[0], " ");
+      }
     }
     if (qty === null) {
       const d = rest.match(/\b(\d+(?:[.,]\d+)?)\b/);
@@ -161,7 +194,7 @@ export function parseMealText(
       }
     }
 
-    const tokens = rest.split(/[^a-zñ]+/).filter((w) => w && !NOISE.has(w));
+    const tokens = rest.split(/[^a-zñ]+/).filter((w) => w && !NOISE.has(w) && !PREP.has(w));
     const core = tokens.join(" ");
     if (!core) continue;
 
@@ -223,6 +256,25 @@ export function parseMealText(
       items.push({
         label, kind: "food", foodId: chosen.id, recipeId: null,
         qty, unit: "ml", assumed,
+        candidates: cands.length > 1 ? cands.slice(0, 5).map((c) => ({ id: c.id, name: c.name, kind: c.kind })) : undefined,
+      });
+      continue;
+    }
+    const ltoks = norm(chosen.name).split(" ");
+    const infMl = ltoks.includes("mate")
+      ? 500
+      : ltoks.includes("cafe") || ltoks.includes("te")
+        ? 200
+        : 0;
+    if (infMl) {
+      if (qty === null) {
+        qty = 1;
+        assumed.push("Cantidad no dicha: asumí 1");
+      }
+      assumed.push(`${chosen.name} ≈ ${infMl} ml por unidad`);
+      items.push({
+        label, kind: "food", foodId: chosen.id, recipeId: null,
+        qty: qty * infMl, unit: "ml", assumed,
         candidates: cands.length > 1 ? cands.slice(0, 5).map((c) => ({ id: c.id, name: c.name, kind: c.kind })) : undefined,
       });
       continue;

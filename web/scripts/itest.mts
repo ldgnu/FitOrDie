@@ -222,6 +222,17 @@ r = await fetch(`${BASE}/api/diary/parse`, {
   method: "POST", headers: H(cA), body: JSON.stringify({ text: "   " }),
 });
 check("parse vacío 400", r.status === 400, r.status);
+r = await fetch(`${BASE}/api/diary/parse`, {
+  method: "POST", headers: H(cA),
+  body: JSON.stringify({ text: "4 huevos revueltos\n60 gr de queso cremoso\nmate" }),
+});
+const pm = await r.json();
+check("parse multilinea 3 items", r.status === 200 && pm.items.length === 3, pm.items?.length);
+check(
+  "parse queso 60g + mate 500ml",
+  pm.items[1]?.qty === 60 && pm.items[2]?.qty === 500 && pm.items[2]?.unit === "ml",
+  pm.items,
+);
 
 // 7c. Foto: PNG 1x1 con auth → 201 + photoId; sin auth → 401
 const png = Buffer.from(

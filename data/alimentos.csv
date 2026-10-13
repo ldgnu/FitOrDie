@@ -45,3 +45,6 @@ name,kcal100,protein100,fat100,carbs100,fiber100,source,source_detail
 "Yogur natural","61","3.5","3.3","4.7","0","manual","Estimación inicial — pendiente validación profesional."
 "Zapallitos","20","1","0.3","4","1","manual","Estimación inicial — pendiente validación profesional."
 "Zapallo","40","1","0.3","10","1.5","manual","Estimación inicial — pendiente validación profesional."
+"Mate","3","0.2","0","0.5","0","manual","Estimación inicial — pendiente validación profesional."
+"Café negro","2","0.3","0","0","0","manual","Estimación inicial — pendiente validación profesional."
+"Té","1","0","0","0.3","0","manual","Estimación inicial — pendiente validación profesional."
