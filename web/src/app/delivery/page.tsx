@@ -6,7 +6,7 @@ import type { DeliveryItem } from "@/lib/delivery";
 const QUERIES = ["keto", "ensalada", "pollo", "carne", "sin tacc"];
 const MEALS = ["desayuno", "media-manana", "almuerzo", "merienda", "cena", "snack"];
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-crema px-3 py-2 text-sm outline-none focus:border-terracota";
 const fmt = new Intl.NumberFormat("es-AR", {
   style: "currency",
   currency: "ARS",

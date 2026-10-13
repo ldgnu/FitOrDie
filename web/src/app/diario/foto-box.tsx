@@ -5,7 +5,7 @@ import type { ParsedItem } from "@/lib/parse-food";
 
 const MEALS = ["desayuno", "media-manana", "almuerzo", "merienda", "cena", "snack"];
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-crema px-3 py-2 text-sm outline-none focus:border-terracota";
 
 interface FotoRes {
   photoId: string;
@@ -175,7 +175,7 @@ export default function FotoBox({ onSaved }: { onSaved: () => void }) {
                   onChange={(e) => setQty((s) => ({ ...s, [i]: e.target.value }))}
                   inputMode="decimal"
                   aria-label="Cantidad"
-                  className="w-24 rounded border border-tinta/25 bg-white px-2 py-1"
+                  className="w-24 rounded border border-tinta/25 bg-crema px-2 py-1"
                 />
                 <span>{it.unit}</span>
               </div>

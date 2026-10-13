@@ -20,7 +20,7 @@ interface Food {
 type Luz = "verde" | "amarillo" | "rojo" | null;
 
 const input =
-  "rounded border border-tinta/25 bg-white px-3 py-2 text-sm outline-none focus:border-terracota";
+  "rounded border border-tinta/25 bg-crema px-3 py-2 text-sm outline-none focus:border-terracota";
 
 const DOT: Record<Exclude<Luz, null>, string> = {
   verde: "bg-oliva",

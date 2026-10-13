@@ -37,6 +37,12 @@ textarea {
   color-scheme: dark;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: rgb(240 231 211 / 0.45);
+  opacity: 1;
+}
+
 /* Entrada discreta de página; se desactiva si el usuario pide menos movimiento */
 @keyframes rise {
   from {
