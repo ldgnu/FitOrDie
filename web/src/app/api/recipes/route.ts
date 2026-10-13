@@ -13,6 +13,8 @@ export async function GET(req: Request) {
   const q = sp.get("q")?.trim() ?? "";
   const ketoOnly = sp.get("keto") === "1";
   const maxMinutes = Number(sp.get("maxMinutes") ?? NaN);
+  const categoria = sp.get("categoria") ?? "";
+  const CATS = ["desayuno", "almuerzo", "merienda", "cena", "bajon"];
 
   const rows = await db
     .select()
@@ -24,9 +26,10 @@ export async function GET(req: Request) {
           : eq(recipes.isPublic, true),
         q ? ilike(recipes.title, `%${q}%`) : undefined,
         Number.isFinite(maxMinutes) ? lte(recipes.minutes, maxMinutes) : undefined,
+        categoria && CATS.includes(categoria) ? eq(recipes.categoria, categoria) : undefined,
       ),
     )
-    .limit(60);
+    .limit(100);
 
   const out = [];
   for (const r of rows) {
@@ -37,7 +40,12 @@ export async function GET(req: Request) {
     out.push({
       id: r.id, title: r.title, description: r.description,
       servings: r.servings, minutes: r.minutes, difficulty: r.difficulty,
-      photoUrl: r.photoUrl,
+      photoUrl: r.photoUrl, categoria: r.categoria,
+      sourceSite: r.sourceSite, sourceUrl: r.sourceUrl, sourceLikes: r.sourceLikes,
+      declarado: {
+        kcal: r.declaredKcal, protein: r.declaredProtein,
+        fat: r.declaredFat, carbs: r.declaredCarbs, fiber: r.declaredFiber,
+      },
       perPortion: per, netos, verdict,
     });
   }

@@ -217,6 +217,40 @@ check(
 r = await fetch(`${BASE}/api/logros`);
 check("logros sin auth 401", r.status === 401, r.status);
 
+// 9. Votos + favoritos + categoría (A)
+const tortillaId = (await (await fetch(`${BASE}/api/recipes?q=tortilla`)).json()).recipes[0]?.id;
+r = await fetch(`${BASE}/api/recipes?categoria=desayuno`);
+const des = await r.json();
+check("filtro categoria desayuno", r.status === 200 && des.recipes.length > 0 && des.recipes.every((x: { categoria: string }) => x.categoria === "desayuno"), des.recipes?.length);
+r = await fetch(`${BASE}/api/recipes/${tortillaId}/voto`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ vote: 1 }),
+});
+let vt = await r.json();
+check("voto me gusta", r.status === 200 && vt.up === 1 && vt.mine === 1, vt);
+r = await fetch(`${BASE}/api/recipes/${tortillaId}/voto`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ vote: -1 }),
+});
+vt = await r.json();
+check("voto cambia a no me gusta", vt.up === 0 && vt.down === 1, vt);
+r = await fetch(`${BASE}/api/recipes/${tortillaId}/voto`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ vote: 0 }),
+});
+vt = await r.json();
+check("voto se quita", vt.up === 0 && vt.down === 0 && vt.mine === 0, vt);
+r = await fetch(`${BASE}/api/recipes/${tortillaId}/voto`, {
+  method: "POST", headers: J, body: JSON.stringify({ vote: 1 }),
+});
+check("voto sin auth 401", r.status === 401, r.status);
+r = await fetch(`${BASE}/api/favoritos`, {
+  method: "POST", headers: H(cA), body: JSON.stringify({ kind: "recipe", itemId: tortillaId }),
+});
+check("fav add 201", r.status === 201, r.status);
+r = await fetch(`${BASE}/api/favoritos?kind=recipe`, { headers: { Cookie: cA } });
+const favs = await r.json();
+check("fav lista 1", favs.favoritos.length === 1, favs.favoritos?.length);
+r = await fetch(`${BASE}/api/favoritos?kind=recipe&itemId=${tortillaId}`, { method: "DELETE", headers: { Cookie: cA } });
+check("fav delete ok", r.status === 200, r.status);
+
 // 7b. Parse de texto libre (A)
 r = await fetch(`${BASE}/api/diary/parse`, {
   method: "POST", headers: H(cA),

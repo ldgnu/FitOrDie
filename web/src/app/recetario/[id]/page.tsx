@@ -15,11 +15,16 @@ interface Detail {
     id: string; title: string; description: string | null; servings: number;
     minutes: number | null; difficulty: string | null; instructions: string;
     storageTip: string | null; photoUrl: string | null;
+    categoria: string | null; sourceUrl: string | null;
+    sourceSite: string | null; sourceLikes: number;
   };
   ingredients: Ing[];
   perPortion: { kcal: number; protein: number; fat: number; carbs: number; fiber: number } | null;
   netos: number | null;
   verdict: string;
+  declarado: { kcal: string | null; protein: string | null; fat: string | null; carbs: string | null; fiber: string | null; fuente: string | null };
+  votos: { up: number; down: number; mine: number };
+  favorite: boolean;
 }
 
 const MEALS = ["desayuno", "media-manana", "almuerzo", "merienda", "cena", "snack"];
@@ -29,15 +34,54 @@ const input =
 export default function RecetaPage() {
   const { id } = useParams<{ id: string }>();
   const [d, setD] = useState<Detail | null>(null);
+  const [votos, setVotos] = useState({ up: 0, down: 0, mine: 0 });
+  const [fav, setFav] = useState(false);
   const [meal, setMeal] = useState("almuerzo");
   const [portions, setPortions] = useState("1");
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/recipes/${id}`).then(async (r) => {
-      if (r.ok) setD(await r.json());
+      if (!r.ok) return;
+      const j: Detail = await r.json();
+      setD(j);
+      setVotos(j.votos);
+      setFav(j.favorite);
     });
   }, [id]);
+
+  async function votar(v: number) {
+    setMsg(null);
+    const r = await fetch(`/api/recipes/${id}/voto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vote: votos.mine === v ? 0 : v }),
+    });
+    if (r.status === 401) {
+      setMsg("Entrá a tu cuenta para votar.");
+      return;
+    }
+    if (r.ok) setVotos(await r.json());
+  }
+
+  async function toggleFav() {
+    setMsg(null);
+    if (!fav) {
+      const r = await fetch("/api/favoritos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "recipe", itemId: id }),
+      });
+      if (r.status === 401) {
+        setMsg("Entrá a tu cuenta para guardar favoritas.");
+        return;
+      }
+      if (r.ok) setFav(true);
+    } else {
+      const r = await fetch(`/api/favoritos?kind=recipe&itemId=${id}`, { method: "DELETE" });
+      if (r.ok) setFav(false);
+    }
+  }
 
   async function registrar(ev: React.FormEvent) {
     ev.preventDefault();
@@ -118,7 +162,43 @@ export default function RecetaPage() {
         </p>
       ) : (
         <p className="mt-2 text-sm text-terracota">
-          Sin datos suficientes para calcular esta receta.
+          Sin datos suficientes para calcularla desde ingredientes.
+        </p>
+      )}
+      {d.declarado?.kcal && (
+        <p className="mt-1 text-sm text-tinta/70">
+          Según {d.declarado.fuente ?? "la fuente"} (por porción): {d.declarado.kcal} kcal ·
+          P {d.declarado.protein} · G {d.declarado.fat} · C {d.declarado.carbs}
+          {d.declarado.fiber ? ` · fibra ${d.declarado.fiber}` : ""}.
+        </p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <button onClick={() => votar(1)} className={`rounded border px-3 py-1 ${votos.mine === 1 ? "border-tinta bg-tinta text-crema" : "border-tinta/25"}`}>
+          Me gusta ({votos.up})
+        </button>
+        <button onClick={() => votar(-1)} className={`rounded border px-3 py-1 ${votos.mine === -1 ? "border-tinta bg-tinta text-crema" : "border-tinta/25"}`}>
+          No me gusta ({votos.down})
+        </button>
+        <button onClick={toggleFav} className={`rounded border px-3 py-1 ${fav ? "border-terracota text-terracota" : "border-tinta/25"}`}>
+          {fav ? "★ Favorita" : "☆ Guardar"}
+        </button>
+      </div>
+      {d.recipe.sourceUrl && (
+        <p className="mt-2 text-sm text-tinta/70">
+          Fuente:{" "}
+          <a href={d.recipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            {d.recipe.sourceSite ?? "ver original"}
+          </a>
+          {" · "}
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(d.recipe.title + " receta paso a paso")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Ver cómo se hace en YouTube
+          </a>
         </p>
       )}
 

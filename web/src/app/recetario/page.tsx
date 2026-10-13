@@ -10,9 +10,15 @@ interface R {
   minutes: number | null;
   difficulty: string | null;
   photoUrl: string | null;
+  categoria: string | null;
+  sourceSite: string | null;
+  sourceLikes: number;
+  declarado: { kcal: string | null; protein: string | null; carbs: string | null };
   netos: number | null;
   verdict: string;
 }
+
+const CATS = ["desayuno", "almuerzo", "merienda", "cena", "bajon"];
 
 const VERDICT_TXT: Record<string, string> = {
   compatible: "Keto ✓",
@@ -28,6 +34,7 @@ export default function RecetarioPage() {
   const [q, setQ] = useState("");
   const [keto, setKeto] = useState(false);
   const [rapido, setRapido] = useState(false);
+  const [cat, setCat] = useState("");
   const [list, setList] = useState<R[]>([]);
 
   useEffect(() => {
@@ -36,11 +43,12 @@ export default function RecetarioPage() {
       if (q.trim()) sp.set("q", q.trim());
       if (keto) sp.set("keto", "1");
       if (rapido) sp.set("maxMinutes", "15");
+      if (cat) sp.set("categoria", cat);
       const r = await fetch(`/api/recipes?${sp.toString()}`);
       if (r.ok) setList((await r.json()).recipes);
     }, 250);
     return () => clearTimeout(t);
-  }, [q, keto, rapido]);
+  }, [q, keto, rapido, cat]);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-16 pt-6">
@@ -72,6 +80,23 @@ export default function RecetarioPage() {
           Rápido (&lt;15 min)
         </button>
       </div>
+      <div className="mt-2 flex flex-wrap gap-2 text-sm">
+        <button
+          onClick={() => setCat("")}
+          className={`rounded border px-3 py-1 ${cat === "" ? "border-tinta bg-tinta text-crema" : "border-tinta/25"}`}
+        >
+          Todas
+        </button>
+        {CATS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCat(cat === c ? "" : c)}
+            className={`rounded border px-3 py-1 ${cat === c ? "border-tinta bg-tinta text-crema" : "border-tinta/25"}`}
+          >
+            {c === "bajon" ? "Bajón" : c[0].toUpperCase() + c.slice(1)}
+          </button>
+        ))}
+      </div>
 
       <ul className="mt-4 divide-y divide-tinta/10">
         {list.map((r) => (
@@ -90,10 +115,12 @@ export default function RecetarioPage() {
             </Link>
             <p className="text-sm text-tinta/70">{r.description}</p>
             <p className="mt-1 text-sm">
+              {r.categoria ? `${r.categoria} · ` : ""}
               {r.minutes ? `${r.minutes} min` : ""}{" "}
               {r.difficulty ? `· ${r.difficulty}` : ""} ·{" "}
-              {r.netos !== null ? `${r.netos} g netos` : "sin datos"} ·{" "}
+              {r.netos !== null ? `${r.netos} g netos` : r.declarado?.kcal ? `~${r.declarado.kcal} kcal (fuente)` : "sin datos"} ·{" "}
               <strong>{VERDICT_TXT[r.verdict]}</strong>
+              {r.sourceSite ? <span className="text-tinta/60"> · {r.sourceSite}{r.sourceLikes ? ` ♥${r.sourceLikes}` : ""}</span> : ""}
             </p>
             </div>
           </li>

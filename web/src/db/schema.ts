@@ -117,6 +117,19 @@ export const recipes = pgTable("recipes", {
   photoUrl: text("photo_url"),
   storageTip: text("storage_tip"),
   isPublic: boolean("is_public").default(true).notNull(),
+  categoria: text("categoria"), // desayuno|almuerzo|merienda|cena|bajon
+  categoriaAuto: boolean("categoria_auto").default(true).notNull(),
+  videoUrl: text("video_url"),
+  sourceUrl: text("source_url").unique(),
+  sourceSite: text("source_site"),
+  sourceLikes: integer("source_likes").default(0).notNull(),
+  // Valores declarados por la fuente (por porción). No calculados: se muestran
+  // como "según <fuente>" y solo alimentan el diario con aviso explícito.
+  declaredKcal: numeric("declared_kcal"),
+  declaredProtein: numeric("declared_protein"),
+  declaredFat: numeric("declared_fat"),
+  declaredCarbs: numeric("declared_carbs"),
+  declaredFiber: numeric("declared_fiber"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -228,6 +241,21 @@ export const idempotencyKeys = pgTable("idempotency_keys", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   response: jsonb("response"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// Me gusta / no me gusta por receta y usuario (1 voto c/u; 0 = quitar).
+export const recipeVotes = pgTable("recipe_votes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  recipeId: uuid("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  vote: integer("vote").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

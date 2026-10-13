@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { foods, recipeIngredients, recipes } from "@/db/schema";
+import { favorites, foods, recipeIngredients, recipeVotes, recipes } from "@/db/schema";
 import { requireUser } from "@/lib/require-user";
 import { ketoVerdict, netCarbs, scaleNutrients } from "@/lib/nutrition";
 import { recipeNutrients } from "@/lib/day-summary";
@@ -40,6 +40,23 @@ export async function GET(
   const per = await recipeNutrients(id, 1);
   const total = per ? scaleNutrients(per, 1, r.servings) : null;
   const netos = per ? netCarbs(per) : null;
+
+  const votes = await db.select().from(recipeVotes).where(eq(recipeVotes.recipeId, id));
+  const up = votes.filter((v) => v.vote === 1).length;
+  const down = votes.filter((v) => v.vote === -1).length;
+  let mine = 0;
+  let favorite = false;
+  if (userId) {
+    const mv = votes.find((v) => v.userId === userId);
+    if (mv) mine = mv.vote;
+    const [f] = await db
+      .select({ id: favorites.id })
+      .from(favorites)
+      .where(and(eq(favorites.userId, userId), eq(favorites.kind, "recipe"), eq(favorites.itemId, id)))
+      .limit(1);
+    favorite = !!f;
+  }
+
   return NextResponse.json({
     recipe: r,
     ingredients: det,
@@ -47,5 +64,11 @@ export async function GET(
     total,
     netos,
     verdict: ketoVerdict(netos, 30),
+    declarado: {
+      kcal: r.declaredKcal, protein: r.declaredProtein, fat: r.declaredFat,
+      carbs: r.declaredCarbs, fiber: r.declaredFiber, fuente: r.sourceSite,
+    },
+    votos: { up, down, mine },
+    favorite,
   });
 }
