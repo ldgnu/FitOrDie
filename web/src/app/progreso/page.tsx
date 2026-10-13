@@ -4,6 +4,7 @@ import { asc, eq } from "drizzle-orm";
 import { authOptions } from "@/auth";
 import { db } from "@/db";
 import { weights } from "@/db/schema";
+import { resumenJuego } from "@/lib/gamificacion";
 import WeekStrip from "../dashboard/week-strip";
 import PesoForm from "./peso-form";
 
@@ -72,6 +73,7 @@ export default async function ProgresoPage() {
     kg: Number(r.weightKg),
   }));
   const last = data.length > 0 ? data[data.length - 1].kg : null;
+  const g = await resumenJuego(userId);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-8 pt-6">
@@ -104,6 +106,24 @@ export default async function ProgresoPage() {
           })}
         </ul>
         {last === null && <p className="mt-2 text-sm">Anotá tu peso para activar los escalones.</p>}
+      </section>
+
+      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
+        <h2 className="font-display text-2xl">Logros</h2>
+        <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {g.logros.map((l) => (
+            <li
+              key={l.key}
+              className={`rounded border p-2 text-sm ${
+                l.desbloqueado ? "border-oliva/50" : "border-tinta/10 opacity-50"
+              }`}
+            >
+              <strong>{l.titulo}</strong>
+              <span className="block text-xs text-tinta/70">{l.desc}</span>
+              {l.fecha && <span className="text-xs text-oliva">{l.fecha}</span>}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <WeekStrip />

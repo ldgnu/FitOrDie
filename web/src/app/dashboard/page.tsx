@@ -6,6 +6,7 @@ import { authOptions } from "@/auth";
 import { db } from "@/db";
 import { recipes, weights } from "@/db/schema";
 import { getDaySummary } from "@/lib/day-summary";
+import { resumenJuego } from "@/lib/gamificacion";
 import LogoutButton from "./logout-button";
 import WeekStrip from "./week-strip";
 
@@ -70,6 +71,7 @@ export default async function Dashboard() {
           : "Vas tirando. Revisá los netos antes de la próxima comida.";
 
   const restan = s.kcalTarget !== null ? s.kcalTarget - Math.round(s.totals.kcal) : null;
+  const g = await resumenJuego(userId);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-8 pt-6">
@@ -210,6 +212,37 @@ export default async function Dashboard() {
             )}
           </p>
         )}
+      </section>
+
+      {/* Juego */}
+      <section className="mt-4 rounded border border-oliva/40 bg-panel p-4">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-display text-2xl">Nivel {g.nivel}</h2>
+          <p className="text-sm">
+            Racha <strong>{g.racha} {g.racha === 1 ? "día" : "días"}</strong>
+          </p>
+        </div>
+        <Bar pct={g.progresoNivel} color="bg-terracota" />
+        <p className="mt-1 text-sm">
+          {g.xp} XP
+          {g.siguiente ? ` · faltan ${g.faltan} para ${g.siguiente}` : " · nivel máximo"}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {g.logros
+            .filter((l) => l.desbloqueado)
+            .slice(-4)
+            .map((l) => (
+              <span key={l.key} className="rounded border border-oliva/50 px-2 py-0.5 text-xs">
+                {l.titulo}
+              </span>
+            ))}
+          {g.logros.every((l) => !l.desbloqueado) && (
+            <span className="text-xs text-tinta/60">Anotá tu primera comida y empieza el juego.</span>
+          )}
+        </div>
+        <Link href="/progreso" className="mt-2 inline-block text-sm underline">
+          Ver todos los logros
+        </Link>
       </section>
 
       <WeekStrip />

@@ -233,6 +233,19 @@ export const idempotencyKeys = pgTable("idempotency_keys", {
     .notNull(),
 });
 
+// Logros desbloqueados (las reglas viven en lib/gamificacion.ts).
+export const achievements = pgTable("achievements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  key: text("key").notNull(),
+  unlockedAt: timestamp("unlocked_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  meta: jsonb("meta"),
+});
+
 export const auditLog = pgTable("audit_log", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),

@@ -207,6 +207,15 @@ check("profile sin auth 401", r.status === 401, r.status);
 r = await fetch(`${BASE}/api/diary/week`, { headers: { Cookie: cA } });
 const week = await r.json();
 check("week 7 días con hoy cargado", r.status === 200 && week.days.length === 7 && week.days[6].entries >= 1, week.days?.map((x: { entries: number }) => x.entries));
+r = await fetch(`${BASE}/api/logros`, { headers: { Cookie: cA } });
+const lg = await r.json();
+check(
+  "logros 200 + xp + primer-registro",
+  r.status === 200 && lg.xp > 0 && lg.logros.find((x: { key: string; desbloqueado: boolean }) => x.key === "primer-registro")?.desbloqueado,
+  { xp: lg.xp, racha: lg.racha },
+);
+r = await fetch(`${BASE}/api/logros`);
+check("logros sin auth 401", r.status === 401, r.status);
 
 // 7b. Parse de texto libre (A)
 r = await fetch(`${BASE}/api/diary/parse`, {
