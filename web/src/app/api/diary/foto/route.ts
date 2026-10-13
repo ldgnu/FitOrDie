@@ -75,9 +75,10 @@ export async function POST(req: Request) {
       ...foodRows.map((x) => ({ id: x.id, name: x.name, kind: "food" as const })),
       ...recRows.map((x) => ({ id: x.id, name: x.title, kind: "recipe" as const })),
     ];
-    const { items, questions } = await identificarFoto(buf.toString("base64"), refs);
+    const { items, questions } = await identificarFoto(buf.toString("base64"), f.type, refs);
     return NextResponse.json({ photoId, vision: true, items, questions }, { status: 201 });
-  } catch {
+  } catch (e) {
+    console.error("vision fallo:", e instanceof Error ? e.message : e);
     return NextResponse.json(
       {
         photoId, vision: true, items: [],
