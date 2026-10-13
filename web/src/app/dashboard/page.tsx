@@ -179,6 +179,22 @@ export default async function Dashboard() {
         )}
       </section>
 
+      {/* Delivery */}
+      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-tinta/70">Sin ganas de cocinar</p>
+            <p className="font-display text-2xl">Pedir afuera keto</p>
+          </div>
+          <Link
+            href="/delivery"
+            className="rounded bg-oliva px-5 py-3 font-bold text-crema"
+          >
+            Ver delivery
+          </Link>
+        </div>
+      </section>
+
       {/* Juego */}
       <section className="mt-4 rounded border border-oliva/40 bg-panel p-4">
         <div className="flex items-baseline justify-between">

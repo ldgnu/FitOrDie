@@ -217,6 +217,17 @@ check(
 r = await fetch(`${BASE}/api/logros`);
 check("logros sin auth 401", r.status === 401, r.status);
 
+// 10. Delivery (A): 401 sin auth, forma con auth
+r = await fetch(`${BASE}/api/delivery?q=keto`);
+check("delivery sin auth 401", r.status === 401, r.status);
+r = await fetch(`${BASE}/api/delivery?q=pollo`, { headers: { Cookie: cA } });
+const del = await r.json().catch(() => null);
+check(
+  "delivery 200 + items array",
+  (r.status === 200 || r.status === 503) && (r.status !== 200 || Array.isArray(del?.items)),
+  { status: r.status, n: del?.items?.length },
+);
+
 // 9. Votos + favoritos + categoría (A)
 const tortillaId = (await (await fetch(`${BASE}/api/recipes?q=tortilla`)).json()).recipes[0]?.id;
 r = await fetch(`${BASE}/api/recipes?categoria=desayuno`);
