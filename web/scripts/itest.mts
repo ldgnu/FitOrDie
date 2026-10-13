@@ -227,6 +227,10 @@ check(
   (r.status === 200 || r.status === 503) && (r.status !== 200 || Array.isArray(del?.items)),
   { status: r.status, n: del?.items?.length },
 );
+r = await fetch(`${BASE}/api/foods?q=pan`, { headers: { Cookie: cA } });
+const fd2 = await r.json();
+const pan = fd2.foods?.[0];
+check("foods trae azucar/sodio", pan && "sugar100" in pan && "sodiumMg100" in pan, Object.keys(pan ?? {}));
 
 // 9. Votos + favoritos + categoría (A)
 const tortillaId = (await (await fetch(`${BASE}/api/recipes?q=tortilla`)).json()).recipes[0]?.id;

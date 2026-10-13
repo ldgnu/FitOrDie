@@ -100,6 +100,8 @@ export const foods = pgTable("foods", {
   fat100: numeric("fat_100"),
   carbs100: numeric("carbs_100"),
   fiber100: numeric("fiber_100"),
+  sugar100: numeric("sugar_100"), // azúcares totales
+  sodiumMg100: numeric("sodium_mg_100"), // sodio en mg
   createdBy: uuid("created_by").references(() => users.id), // null = global
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
