@@ -1,11 +1,10 @@
-// Visión para identificar comida en fotos. Proveedores configurables:
-//   VISION_PROVIDER=ollama (local, default si hay OLLAMA_URL)
-//   VISION_PROVIDER=gemini (nube, requiere GEMINI_API_KEY)
-//   VISION_PROVIDER=groq   (nube, requiere GROQ_API_KEY)
-//   ausente/manual         (la foto se guarda y se carga a mano)
-// El proveedor solo INTERPRETA (qué hay + porciones estimadas); los cálculos
-// los hace el motor nutricional. Todo lo estimado vuelve marcado como asumido.
-// Las fotos solo salen de tu servidor si VOS configurás un proveedor de nube.
+// Visión para identificar comida en fotos. Solo por API de nube (a elección):
+//   VISION_PROVIDER=gemini (requiere GEMINI_API_KEY, gratis con límites)
+//   VISION_PROVIDER=groq   (requiere GROQ_API_KEY, gratis con límites)
+//   ausente                (modo manual: la foto se guarda y se carga a mano)
+// OJO: con gemini/groq TUS FOTOS salen a esa nube. Solo configuralo si te sirve.
+// El proveedor solo INTERPRETA (qué hay + porciones); los cálculos los hace
+// el motor nutricional. Todo lo estimado vuelve marcado como asumido.
 import { findCandidates, type FoodRef, type ParsedItem } from "./parse-food";
 
 const PROMPT = `Observá esta foto de comida y devolvé SOLO un JSON válido, sin texto extra, con este formato exacto:
@@ -18,18 +17,8 @@ interface VisionItem {
   unidad?: string;
 }
 
-export type Provider = "ollama" | "gemini" | "groq" | "none";
-
-export function provider(): Provider {
-  const p = (process.env.VISION_PROVIDER ?? "").toLowerCase();
-  if (p === "gemini" || p === "groq" || p === "ollama" || p === "none") return p;
-  if (process.env.OLLAMA_URL) return "ollama";
-  return "none";
-}
-
 export function visionDisponible(): boolean {
-  const p = provider();
-  if (p === "ollama") return true;
+  const p = (process.env.VISION_PROVIDER ?? "").toLowerCase();
   if (p === "gemini") return !!process.env.GEMINI_API_KEY;
   if (p === "groq") return !!process.env.GROQ_API_KEY;
   return false;
@@ -99,26 +88,6 @@ function extraerJSON(text: string): unknown {
   return JSON.parse(clean.slice(start, end + 1));
 }
 
-async function identificarOllama(b64: string, refs: FoodRef[]) {
-  const url = process.env.OLLAMA_URL!;
-  const model = process.env.OLLAMA_MODEL ?? "moondream";
-  const res = await fetch(`${url}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content: PROMPT, images: [b64] }],
-      stream: false,
-      format: "json",
-      options: { temperature: 0, num_predict: 400 },
-    }),
-    signal: AbortSignal.timeout(120000),
-  });
-  if (!res.ok) throw new Error(`ollama ${res.status}`);
-  const data = await res.json();
-  return mapear(extraerJSON(String(data?.message?.content ?? "")), refs);
-}
-
 async function identificarGemini(b64: string, mime: string, refs: FoodRef[]) {
   const key = process.env.GEMINI_API_KEY!;
   const model = process.env.VISION_MODEL ?? "gemini-2.0-flash";
@@ -180,13 +149,11 @@ export async function identificarFoto(
   mime: string,
   refs: FoodRef[],
 ): Promise<{ items: ParsedItem[]; questions: string[] }> {
-  const p = provider();
+  const p = (process.env.VISION_PROVIDER ?? "").toLowerCase();
   if (p === "gemini" && process.env.GEMINI_API_KEY)
     return identificarGemini(imageB64, mime, refs);
   if (p === "groq" && process.env.GROQ_API_KEY)
     return identificarGroq(imageB64, mime, refs);
-  if (p === "ollama" && process.env.OLLAMA_URL)
-    return identificarOllama(imageB64, refs);
   return {
     items: [],
     questions: ["Visión no configurada: describí la foto o cargala manual."],

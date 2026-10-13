@@ -30,21 +30,7 @@ services:
         condition: service_healthy
     volumes:
       - uploads:/app/uploads
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  # Visión autocontenida (servidor propio, sin Ollama en el host):
-  # docker compose --profile vision up -d con OLLAMA_URL=http://ollama:11434,
-  # luego: docker compose exec ollama ollama pull moondream.
-  # Sin ese perfil, la carga por foto funciona en modo manual.
-  ollama:
-    image: ollama/ollama:latest
-    profiles: [vision]
-    restart: unless-stopped
-    volumes:
-      - ollama-data:/root/.ollama
 
 volumes:
   pgdata:
   uploads:
-  ollama-data:
