@@ -7,12 +7,21 @@ import { db } from "@/db";
 import { achievements, diaryEntries, profiles, weights } from "@/db/schema";
 import { getDaySummary } from "./day-summary";
 
-export const NIVELES = [
+export const NIVELES_SUAVE = [
   { min: 0, nombre: "Cebador" },
   { min: 200, nombre: "Parrillero" },
   { min: 500, nombre: "Cocinero" },
   { min: 1000, nombre: "Chef Keto" },
   { min: 2000, nombre: "Leyenda" },
+];
+
+// Testigo: abajo te bardea, arriba te respeta a regañadientes.
+export const NIVELES_PICANTE = [
+  { min: 0, nombre: "Caso Perdido" },
+  { min: 200, nombre: "Proyecto" },
+  { min: 500, nombre: "Zafa" },
+  { min: 1000, nombre: "Respetable" },
+  { min: 2000, nombre: "Máquina" },
 ];
 
 export interface LogroDef {
@@ -121,6 +130,8 @@ export async function resumenJuego(userId: string): Promise<ResumenJuego> {
   }
 
   const xp = entries.length * 10 + wl.length * 5 + perfectos * 50 + ketoDias * 25;
+
+  const NIVELES = profile?.crudeza === "suave" ? NIVELES_SUAVE : NIVELES_PICANTE;
 
   let nivel = NIVELES[0];
   let siguiente: (typeof NIVELES)[number] | null = null;

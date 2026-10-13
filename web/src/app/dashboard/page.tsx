@@ -4,20 +4,14 @@ import { getServerSession } from "next-auth";
 import { desc, eq } from "drizzle-orm";
 import { authOptions } from "@/auth";
 import { db } from "@/db";
-import { recipes, weights } from "@/db/schema";
+import { profiles, recipes, weights } from "@/db/schema";
 import { getDaySummary } from "@/lib/day-summary";
 import { resumenJuego } from "@/lib/gamificacion";
+import AhoraToca from "./ahora-toca";
 import LogoutButton from "./logout-button";
 import WeekStrip from "./week-strip";
 
 export const dynamic = "force-dynamic";
-
-const MEAL_SLOTS = [
-  { v: "desayuno", label: "Desayuno", hora: "9:00", desde: 5, hasta: 10 },
-  { v: "almuerzo", label: "Almuerzo", hora: "13:00", desde: 10, hasta: 15 },
-  { v: "merienda", label: "Merienda", hora: "18:00", desde: 15, hasta: 20 },
-  { v: "cena", label: "Cena", hora: "22:00", desde: 20, hasta: 24 },
-] as const;
 
 const ESCALONES = [85, 82, 80];
 
@@ -35,10 +29,18 @@ export default async function Dashboard() {
   const userId = session.user.id;
 
   const now = new Date();
-  const day = now.toISOString().slice(0, 10);
-  const hour = now.getHours();
-  const saludo = hour < 12 ? "Buen día" : hour < 20 ? "Buenas tardes" : "Buenas noches";
-  const actual = MEAL_SLOTS.find((m) => hour >= m.desde && hour < m.hasta) ?? MEAL_SLOTS[0];
+  const [prof] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
+  const tz = prof?.timezone ?? "America/Argentina/Buenos_Aires";
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 
   const s = await getDaySummary(userId, day);
   const wl = await db
@@ -61,9 +63,7 @@ export default async function Dashboard() {
 
   const testigo =
     s.entries.length === 0
-      ? actual.v === "desayuno"
-        ? "Arrancá el día anotando el desayuno. Ni el mate zafa del registro."
-        : `Todavía no hay nada hoy. El dato no muerde: arrancá con ${actual.label.toLowerCase()}.`
+      ? "Hoy todavía no anotaste nada. El dato no muerde: arrancá con lo que comiste."
       : s.kcalTarget && s.totals.kcal > s.kcalTarget
         ? "Te pasaste del objetivo. Anotá la verdad y seguí: esconderse no sirve."
         : s.keto.verdict === "compatible"
@@ -77,7 +77,7 @@ export default async function Dashboard() {
     <main className="mx-auto w-full max-w-2xl px-5 pb-8 pt-6">
       <div className="flex items-center justify-between">
         <p className="text-sm tracking-wide text-oliva">
-          {saludo.toUpperCase()} — {day}
+          HOY — {day}
         </p>
         <LogoutButton />
       </div>
@@ -86,42 +86,7 @@ export default async function Dashboard() {
         {testigo}
       </p>
 
-      {/* Próxima comida */}
-      <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-tinta/70">Ahora toca</p>
-            <p className="font-display text-2xl">
-              {actual.label} <span className="text-base text-tinta/60">{actual.hora}</span>
-            </p>
-          </div>
-          <Link
-            href={`/diario?meal=${actual.v}`}
-            className="rounded bg-terracota px-5 py-3 font-bold text-crema"
-          >
-            + Anotar
-          </Link>
-        </div>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {MEAL_SLOTS.filter((m) => m.v !== actual.v).map((m) => (
-            <Link
-              key={m.v}
-              href={`/diario?meal=${m.v}`}
-              className="rounded border border-tinta/25 px-2 py-2 text-center text-sm"
-            >
-              {m.label}
-              <span className="block text-xs text-tinta/60">{m.hora}</span>
-            </Link>
-          ))}
-          <Link
-            href="/diario?meal=snack"
-            className="rounded border border-tinta/25 px-2 py-2 text-center text-sm"
-          >
-            Snack
-            <span className="block text-xs text-tinta/60">antojo</span>
-          </Link>
-        </div>
-      </section>
+      <AhoraToca />
 
       {/* Macros */}
       <section className="mt-4 rounded border border-tinta/15 bg-panel p-4">
