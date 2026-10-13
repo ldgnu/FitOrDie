@@ -213,6 +213,25 @@ r = await fetch(`${BASE}/api/diary/parse`, {
 });
 check("parse vacío 400", r.status === 400, r.status);
 
+// 7c. Foto: PNG 1x1 con auth → 201 + photoId; sin auth → 401
+const png = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+let fd = new FormData();
+fd.append("photo", new Blob([png], { type: "image/png" }), "test.png");
+r = await fetch(`${BASE}/api/diary/foto`, { method: "POST", headers: { Cookie: cA }, body: fd });
+const frFoto = await r.json().catch(() => ({}));
+check("foto upload 201 + photoId", r.status === 201 && !!frFoto.photoId, { status: r.status });
+fd = new FormData();
+fd.append("photo", new Blob([png], { type: "image/png" }), "t.png");
+r = await fetch(`${BASE}/api/diary/foto`, { method: "POST", body: fd });
+check("foto sin auth 401", r.status === 401, r.status);
+if (frFoto.photoId) {
+  r = await fetch(`${BASE}/api/fotos/${frFoto.photoId}`, { headers: { Cookie: cB } });
+  check("foto ajena 404", r.status === 404, r.status);
+}
+
 // 8. Auditoría en DB (dev): ediciones + deletes + registros quedaron trazados
 const sql = postgres(process.env.DATABASE_URL!);
 const edits = await sql`select count(*)::int as n from entry_edits where entry_id = ${entryId}`;

@@ -12,10 +12,17 @@ export const metadata: Metadata = {
   description:
     "Registrá qué comés, calculá nutrientes, evaluá keto y enterate la verdad. Diario alimentario y cambio físico, privado por defecto.",
   manifest: "/manifest.webmanifest",
+  icons: { apple: "/apple-touch-icon.png" },
+  appleWebApp: {
+    capable: true,
+    title: "FitOrDie",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#171310",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -27,8 +34,8 @@ export default function RootLayout({
     <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-crema font-body text-tinta antialiased">
         <Providers>
-          {children}
           <AppNav />
+          {children}
         </Providers>
       </body>
     </html>

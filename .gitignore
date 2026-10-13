@@ -22,3 +22,6 @@ coverage/
 
 # loaders personales: jamás commitear
 web/scripts/load-*.mts
+# uploads locales (fotos): jamás commitear
+uploads/
+web/uploads/

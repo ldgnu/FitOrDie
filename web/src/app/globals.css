@@ -17,6 +17,7 @@
 body {
   background: var(--color-crema);
   color: var(--color-tinta);
+  overflow-x: clip;
 }
 
 ::selection {

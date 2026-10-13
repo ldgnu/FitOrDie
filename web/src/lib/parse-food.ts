@@ -63,7 +63,7 @@ function singulars(s: string): string[] {
   return v;
 }
 
-function findCandidates(core: string, refs: FoodRef[]): FoodRef[] {
+export function findCandidates(core: string, refs: FoodRef[]): FoodRef[] {
   const out: Array<{ r: FoodRef; score: number }> = [];
   for (const r of refs) {
     const n = norm(r.name);

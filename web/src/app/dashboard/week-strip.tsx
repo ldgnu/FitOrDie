@@ -28,7 +28,7 @@ export default function WeekStrip() {
   return (
     <section className="mt-6">
       <h2 className="font-display text-xl">Últimos 7 días</h2>
-      <div className="mt-2 grid grid-cols-7 gap-1 text-center text-xs">
+      <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[10px] sm:text-xs">
         {days.map((d) => (
           <div key={d.day} className="rounded bg-panel/50 p-1">
             <p>{d.day.slice(5)}</p>
@@ -37,7 +37,7 @@ export default function WeekStrip() {
                 d.entries > 0 ? (COLOR[d.verdict] ?? "bg-tinta/20") : "bg-tinta/10"
               }`}
             />
-            <p>{d.entries > 0 ? d.kcal : "—"}</p>
+            <p className="tabular-nums leading-tight">{d.entries > 0 ? d.kcal : "—"}</p>
           </div>
         ))}
       </div>

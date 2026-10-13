@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import ParseBox from "./parse-box";
+import FotoBox from "./foto-box";
 
 interface Nutrients {
   kcal: number;
@@ -199,6 +200,7 @@ function DiarioInner() {
       </div>
 
       <ParseBox onSaved={load} />
+      <FotoBox onSaved={load} />
 
       {data && (
         <section className="mt-4 rounded border border-tinta/15 bg-panel/50 p-4 text-sm">

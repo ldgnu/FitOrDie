@@ -236,3 +236,20 @@ export const auditLog = pgTable("audit_log", {
     .defaultNow()
     .notNull(),
 });
+
+// Fotos de comidas (archivo en volumen, solo metadata acá; jamás público).
+export const mealPhotos = pgTable("meal_photos", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  entryId: uuid("entry_id").references(() => diaryEntries.id, {
+    onDelete: "set null",
+  }),
+  filename: text("filename").notNull(),
+  mime: text("mime").notNull(),
+  size: integer("size").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

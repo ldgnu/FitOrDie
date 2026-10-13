@@ -28,6 +28,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   pgdata:
+  uploads:
