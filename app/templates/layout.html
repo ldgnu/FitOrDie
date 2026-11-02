@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{.Title}} · FitOrDie</title>
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0f0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitOrDie">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon-180.png">
+  <link rel="stylesheet" href="/static/css/app.css?v={{.AssetVer}}">
+</head>
+<body data-page="{{.Page}}">
+  <a class="skip" href="#main">Ir al contenido</a>
+
+  <main id="main">
+    {{if .Msg}}<p class="flash flash--ok" role="status">{{.Msg}}</p>{{end}}
+    {{if .Err}}<p class="flash flash--err" role="alert">{{.Err}}</p>{{end}}
+    {{template "content" .}}
+  </main>
+
+  <nav class="nav" aria-label="Secciones">
+    <a href="/"{{if eq .Page "hoy"}} aria-current="page"{{end}}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+      <span>Hoy</span>
+    </a>
+    <a href="/rutina"{{if eq .Page "rutina"}} aria-current="page"{{end}}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M3.5 9v5M17.5 6.5v11M20.5 9v5M6.5 12h11"/></svg>
+      <span>Rutina</span>
+    </a>
+    <a href="/progreso"{{if eq .Page "progreso"}} aria-current="page"{{end}}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6M12 19V7M17 19v-9"/></svg>
+      <span>Progreso</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "name": "FitOrDie",
+  "short_name": "FitOrDie",
+  "description": "Diario de comidas, macros y rutina. Personal, sin nube.",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#0a0f0e",
+  "theme_color": "#0a0f0e",
+  "categories": [
+    "health",
+    "fitness",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/apple-touch-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cargar comida",
+      "url": "./comidas.html",
+      "description": "Buscar alimento y sumarlo al día"
+    },
+    {
+      "name": "Rutina de hoy",
+      "url": "./rutina.html",
+      "description": "Ver el día de fuerza"
+    }
+  ]
+}

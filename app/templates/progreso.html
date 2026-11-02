@@ -1,0 +1,193 @@
+{{define "content"}}
+<header class="head">
+  <p class="kicker">Peso y tendencia</p>
+  <h1>Progreso</h1>
+  <p class="sub">
+    {{if .HasWeights}}Objetivo {{num .Profile.TargetWeightMin}}–{{num .Profile.TargetWeightMax}} kg · faltan {{kg .ToGoal}} kg
+    {{else}}Todavía no hay registros de peso{{end}}
+  </p>
+</header>
+
+<section class="card">
+  <div class="card__head">
+    <h2>Peso actual</h2>
+    <span class="hint">{{dmy .Today}}</span>
+  </div>
+  <p class="hero" style="margin-top:10px">
+    <span class="big num">{{kg .NowKg}}</span>
+    <span class="of">kg</span>
+  </p>
+  <p class="hint" style="margin-top:6px">
+    {{if .HasWeights}}Desde el perfil ({{kg .Profile.WeightKg}} kg){{else}}Sin datos{{end}}
+  </p>
+
+  <div class="bar" style="margin-top:16px"><i style="width:{{pct .GoalPct}}%"></i></div>
+  <p class="hint" style="margin-top:6px">
+    {{pct .GoalPct}}% del camino al objetivo ({{num .Profile.TargetWeightMin}}–{{num .Profile.TargetWeightMax}} kg)
+  </p>
+</section>
+
+<section class="card" id="peso">
+  <div class="card__head">
+    <h2>Registrar peso</h2>
+    <span class="hint">uno por día</span>
+  </div>
+  <form class="form form--row" method="post" action="/progreso/peso">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <div class="field">
+      <label class="lbl" for="p-date">Fecha</label>
+      <input id="p-date" type="date" name="date" value="{{with .WeightForm}}{{.Date}}{{else}}{{.Date}}{{end}}" required>
+    </div>
+    <div class="field field--narrow">
+      <label class="lbl" for="p-kg">Kilos</label>
+      <input id="p-kg" type="number" name="kg" step="0.01" min="20" max="400" inputmode="decimal"
+        required value="{{with .WeightForm}}{{.Kg}}{{end}}" placeholder="89,65">
+    </div>
+    <div class="field field--grow">
+      <label class="lbl" for="p-note">Nota (opcional)</label>
+      <input id="p-note" type="text" name="note" maxlength="200"
+        value="{{with .WeightForm}}{{.Note}}{{end}}" placeholder="en ayunas, pesa real…">
+    </div>
+    <div class="field field--action">
+      <button class="btn btn--accent" type="submit">Guardar peso</button>
+    </div>
+  </form>
+  <p class="hint">Si cargás una fecha vieja, el peso del perfil no se toca: solo sigue a la fecha más reciente.</p>
+</section>
+
+<section class="card">
+  <div class="card__head">
+    <h2>Tendencia</h2>
+    {{if .HasSpark}}<span class="hint">{{.SparkDate0}} → {{.SparkDateN}}</span>{{end}}
+  </div>
+  {{if .HasSpark}}
+  <svg class="spark" viewBox="0 0 320 140" role="img"
+       aria-label="Evolución del peso: de {{.SparkFirst}} kg ({{.SparkDate0}}) a {{.SparkLast}} kg ({{.SparkDateN}})">
+    <defs>
+      <linearGradient id="fillProg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="{{.SparkArea}}" fill="url(#fillProg)"/>
+    <path class="spark__line" d="{{.SparkLine}}"/>
+    <text x="30" y="18" text-anchor="end">{{.SparkMax}}</text>
+    <text x="30" y="128" text-anchor="end">{{.SparkMin}}</text>
+    <text x="34" y="138" text-anchor="start">{{.SparkDate0}}</text>
+    <text x="312" y="138" text-anchor="end">{{.SparkDateN}}</text>
+  </svg>
+  {{else}}
+  <p class="empty">Se necesitan al menos 2 registros para dibujar la tendencia.</p>
+  {{end}}
+</section>
+
+<section class="card">
+  <h2>Resumen</h2>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__v num">{{if .HasWeek}}{{kg .WeekDelta}}<small> kg</small>{{else}}—{{end}}</div>
+      <div class="stat__l">última semana</div>
+    </div>
+    <div class="stat">
+      <div class="stat__v num">{{.Streak}}<small> días</small></div>
+      <div class="stat__l">racha de cargas</div>
+    </div>
+    <div class="stat">
+      <div class="stat__v num">{{.LoggedCount}}<small> días</small></div>
+      <div class="stat__l">con registros (90 d)</div>
+    </div>
+    <div class="stat">
+      <div class="stat__v num">{{len .Weights}}<small> reg.</small></div>
+      <div class="stat__l">de peso</div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card__head">
+    <h2>Pesos y reps</h2>
+    <span class="hint">{{if .HasProgress}}{{len .ProgressDays}} entrenamiento{{if gt (len .ProgressDays) 1}}s{{end}}{{else}}sin series{{end}}</span>
+  </div>
+
+  {{if .HasProgress}}
+  <h3 class="pgroup">Por día</h3>
+  {{range .ProgressDays}}
+  <article class="pday">
+    <div class="pday__top">
+      <span class="pday__date">{{.Date}}</span>
+      {{if .RoutineDay}}<span class="badge">Día {{.RoutineDay}}</span>{{end}}
+      <span class="pday__vol num">{{num .Volume}} kg · {{.SetCount}} series</span>
+    </div>
+    <p class="hint">{{if .Weekday}}{{.Weekday}} · {{end}}{{.DayName}}</p>
+    {{range .Exercises}}
+    <div class="pex">
+      <p class="pex__name">{{.Name}}</p>
+      <div class="pex__sets">
+        {{range .Sets}}<span class="set num">{{.Text}}{{if .RIR}}<i class="set__rir">{{.RIR}}</i>{{end}}</span>{{end}}
+      </div>
+    </div>
+    {{end}}
+  </article>
+  {{end}}
+
+  <h3 class="pgroup">Por semana</h3>
+  {{if .HasExerciseWeeks}}
+  <p class="hint">Mejor serie de cada semana · {{.ProgressSpan}}</p>
+  {{range .ExerciseWeeks}}
+  <article class="wex">
+    <p class="wex__name">{{.Name}}</p>
+    <ul class="wex__rows">
+      {{range .Weeks}}
+      <li class="wrow">
+        <span class="wrow__k">{{.Label}}</span>
+        <span class="wrow__v num">{{.Best}}{{if .Delta}}<span class="badge {{if eq .DeltaKind "ok"}}badge--ok{{else if eq .DeltaKind "warn"}}badge--warn{{end}}">{{.Delta}}</span>{{end}}</span>
+        <span class="wrow__sub num">{{.Sets}} series{{if .Volume}} · {{num .Volume}} kg{{end}}</span>
+      </li>
+      {{end}}
+    </ul>
+  </article>
+  {{end}}
+  {{else}}
+  <p class="empty">Sin series en las últimas {{.ProgressWeekCount}} semanas.</p>
+  {{end}}
+  {{else}}
+  <p class="empty">Todavía no hay series cargadas. Se registran desde <a href="/rutina#sesion">Rutina</a> o por el chat de Qwerty.</p>
+  {{end}}
+</section>
+
+<section class="card">
+  <div class="card__head">
+    <h2>Historial</h2>
+    <span class="hint">por semana</span>
+  </div>
+  {{if .WeightWeeks}}
+    {{range .WeightWeeks}}
+    <div class="week">
+      <div class="week__top">
+        <span class="week__label">{{.Label}}</span>
+        <span class="badge {{if lt .Delta 0.0}}badge--ok{{else if gt .Delta 0.0}}badge--warn{{end}}">
+          {{if gt .Delta 0.0}}+{{end}}{{kg .Delta}} kg
+        </span>
+      </div>
+      <ul class="rows">
+        {{range .Rows}}
+        <li class="row--entry">
+          <span>{{dmy .Day}}{{if .Note}} <span class="hint">· {{.Note}}</span>{{end}}</span>
+          <span class="dim num">{{kg .Kg}} kg</span>
+          <form class="rowdel" method="post" action="/progreso/peso/borrar">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <input type="hidden" name="date" value="{{.Day}}">
+            <button type="submit" class="xbtn" title="Borrar el peso del {{dmy .Day}}" aria-label="Borrar el peso del {{dmy .Day}}">×</button>
+          </form>
+        </li>
+        {{end}}
+      </ul>
+    </div>
+    {{end}}
+  {{else}}
+  <p class="empty">Sin registros todavía.</p>
+  {{end}}
+</section>
+
+<p class="foot">Cargá el peso acá o por el chat de Qwerty.</p>
+{{end}}

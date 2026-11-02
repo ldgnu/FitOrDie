@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rutina · FitOrDie</title>
+  <meta name="description" content="FitOrDie — diario de comidas, macros y rutina. App personal.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0f0e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitOrDie">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("fitordie:demo:v1");
+        if (raw) {
+          var st = JSON.parse(raw);
+          if (st && st.theme) document.documentElement.setAttribute("data-theme", st.theme);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  
+</head>
+<body data-page="rutina">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol><symbol id="i-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a2.5 2.5 0 0 0 5 0V3M8.5 11.5V21M17 3v18M17 3c2.2 1.2 3.2 3.2 3.2 5.6 0 2.3-1 4.1-3.2 4.4"/></symbol><symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></symbol><symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16M8 16l3.5-4 3 2.5L20 8"/></symbol><symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></symbol><symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/></symbol><symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M4.2 19.8l1.4-1.4"/><circle cx="12" cy="12" r="4.5"/></symbol><symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol><symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></symbol><symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol><symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM18 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 20H3zM12 10v4.5M12 17.4h.01"/></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 8h.01"/></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></symbol><symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M12 3v4M7.5 7 4 15h7zM16.5 7 13 15h7z"/></symbol><symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 5.5 5 9a5 5 0 0 1-10 0c0-2 .8-3.4 2-5 .4 1.5 1 2 2 2 .5-2 .5-4 1-6z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></symbol><symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 20h14"/></symbol><symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 15.5l4.2-4 3.1 3 3-2.2 6.2 6.2"/><circle cx="9" cy="9" r="1.3"/></symbol><symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></symbol><symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></symbol><symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol><symbol id="i-youtube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></symbol><symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h10"/></symbol><symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l5.5 5.5L13 9l7 7M20 12.5V16h-3.5"/></symbol><symbol id="i-camera-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><path d="M4 20 20 4"/></symbol><symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14.5 5.5 18.5 9.5"/></symbol><symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H5v14h4M15 8l4 4-4 4M19 12H9"/></symbol><symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v6c0 4.5-3 7.6-7.5 9-4.5-1.4-7.5-4.5-7.5-9V6z"/></symbol><symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5a15 15 0 0 1 19 0M5.5 12a10.5 10.5 0 0 1 13 0M8.5 15.4a6 6 0 0 1 7 0M12 19h.01"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13h5l-1 9 8-11h-5z"/></symbol></svg>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <nav class="railnav" aria-label="Navegación principal">
+  <div class="railnav__brand"><span class="avatar">FD</span><span>FitOrDie</span></div>
+  <a class="railnav__item" href="index.html"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Hoy</span></a><a class="railnav__item" href="comidas.html"><svg class="i" aria-hidden="true"><use href="#i-utensils"/></svg><span>Comidas</span></a><a class="railnav__item" href="rutina.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-dumbbell"/></svg><span>Rutina</span></a><a class="railnav__item" href="progreso.html"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg><span>Progreso</span></a><a class="railnav__item" href="perfil.html"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span>Perfil</span></a>
+  <div class="railnav__foot">Plan Fran · Mesociclo 1<br>v0.1 · prototipo UI</div>
+</nav>
+  <div class="app-shell">
+    <main class="app-main" id="main">
+<header class="pagehead">
+  <div>
+    <p class="kicker">Mesociclo 1 · 3 días por semana</p>
+    <h1 class="pagehead__title">Rutina</h1>
+    <p class="pagehead__sub">Fuerza A/B/C · sentate entre series</p>
+  </div>
+  <div class="pagehead__actions"><button class="iconbtn" type="button" data-theme-toggle aria-label="Cambiar entre tema claro y oscuro"><svg class="i theme-sun" aria-hidden="true"><use href="#i-sun"/></svg><svg class="i theme-moon" aria-hidden="true"><use href="#i-moon"/></svg></button></div>
+</header>
+
+
+<div class="daytabs mb-2" role="group" aria-label="Elegí el día"><button class="daytab" type="button" data-daytab="A" aria-pressed="true"><span class="daytab__k">Día A</span><span class="daytab__n">Empuje + piernas</span></button><button class="daytab" type="button" data-daytab="B" aria-pressed="false"><span class="daytab__k">Día B</span><span class="daytab__n">Femoral + hombro + tirón</span></button><button class="daytab" type="button" data-daytab="C" aria-pressed="false"><span class="daytab__k">Día C</span><span class="daytab__n">Piernas + espalda</span></button></div>
+<section data-day="A" class="section">
+  <div class="card card--tight">
+    <div class="between">
+      <div>
+        <p class="kicker">Día A · Mesociclo 1</p>
+        <p class="strong mt-1">Empuje + piernas</p>
+      </div>
+      <span class="badge" data-progress-label>0 de 5 hechos</span>
+    </div>
+    <div class="bar bar--thick mt-3" data-progress style="--v:0%"><i></i></div>
+    <p class="hint mt-2">Prensa, pecho, remo, hombro y bíceps</p>
+  </div>
+  <div class="stack mt-3"><article class="ex" data-ex="A1">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Prensa+de+piernas+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Prensa de piernas</h3>
+        <p class="ex__note">Bajada controlada, sin trabar las rodillas al final.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="A1" aria-pressed="false"
+              aria-label="Marcar Prensa de piernas como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="A2">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Press+de+pecho+%28m%C3%A1quina+o+mancuernas%29+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Press de pecho (máquina o mancuernas)</h3>
+        <p class="ex__note">Bajada de 2 segundos, sin rebotar en el pecho.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="A2" aria-pressed="false"
+              aria-label="Marcar Press de pecho (máquina o mancuernas) como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press de pecho (máquina o mancuernas) serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press de pecho (máquina o mancuernas) serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press de pecho (máquina o mancuernas) serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press de pecho (máquina o mancuernas) serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press de pecho (máquina o mancuernas) serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press de pecho (máquina o mancuernas) serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="A3">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Remo+%28m%C3%A1quina+o+mancuernas%29+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Remo (máquina o mancuernas)</h3>
+        <p class="ex__note">Codos cerca del torso, sin balancear la espalda.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="A3" aria-pressed="false"
+              aria-label="Marcar Remo (máquina o mancuernas) como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo (máquina o mancuernas) serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo (máquina o mancuernas) serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo (máquina o mancuernas) serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo (máquina o mancuernas) serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo (máquina o mancuernas) serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo (máquina o mancuernas) serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="A4">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Elevaciones+laterales+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Elevaciones laterales</h3>
+        <p class="ex__note">Hombros abajo: subí el codo, no el trapecio.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="A4" aria-pressed="false"
+              aria-label="Marcar Elevaciones laterales como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">2 × 12-15</span>
+      <span class="tag">RIR 2-3</span>
+      <span class="tag">descanso 60 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Elevaciones laterales serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Elevaciones laterales serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Elevaciones laterales serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Elevaciones laterales serie 2: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="A5">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Curl+de+b%C3%ADceps+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Curl de bíceps</h3>
+        <p class="ex__note">Codos pegados al torso, bajada de 2 segundos.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="A5" aria-pressed="false"
+              aria-label="Marcar Curl de bíceps como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">2 × 10-12</span>
+      <span class="tag">RIR 2-3</span>
+      <span class="tag">descanso 60 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Curl de bíceps serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Curl de bíceps serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Curl de bíceps serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Curl de bíceps serie 2: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article></div>
+  <div class="callout mt-3">
+    <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
+    <div>RIR 3-4 siempre: nunca al fallo. Exhalá en el esfuerzo, levantate y sentate lento.</div>
+  </div>
+</section><section data-day="B" hidden class="section">
+  <div class="card card--tight">
+    <div class="between">
+      <div>
+        <p class="kicker">Día B · Mesociclo 1</p>
+        <p class="strong mt-1">Femoral + hombro + tirón</p>
+      </div>
+      <span class="badge" data-progress-label>0 de 4 hechos</span>
+    </div>
+    <div class="bar bar--thick mt-3" data-progress style="--v:0%"><i></i></div>
+    <p class="hint mt-2">Cadena posterior, hombro y espalda</p>
+  </div>
+  <div class="stack mt-3"><article class="ex" data-ex="B1">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Curl+femoral+en+m%C3%A1quina+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Curl femoral en máquina</h3>
+        <p class="ex__note">Movimiento lento, sentí el femoral en la subida.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="B1" aria-pressed="false"
+              aria-label="Marcar Curl femoral en máquina como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 12-15</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 90 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Curl femoral en máquina serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Curl femoral en máquina serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Curl femoral en máquina serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Curl femoral en máquina serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Curl femoral en máquina serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Curl femoral en máquina serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="B2">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Press+militar+sentado+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Press militar sentado</h3>
+        <p class="ex__note">Espalda apoyada, no arquees la lumbar.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="B2" aria-pressed="false"
+              aria-label="Marcar Press militar sentado como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press militar sentado serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press militar sentado serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press militar sentado serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press militar sentado serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press militar sentado serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press militar sentado serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="B3">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Jal%C3%B3n+al+pecho+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Jalón al pecho</h3>
+        <p class="ex__note">Llevá la barra al pecho, no atrás de la nuca.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="B3" aria-pressed="false"
+              aria-label="Marcar Jalón al pecho como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 90 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Jalón al pecho serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Jalón al pecho serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Jalón al pecho serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Jalón al pecho serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Jalón al pecho serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Jalón al pecho serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="B4">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Extensi%C3%B3n+de+tr%C3%ADceps+en+polea+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Extensión de tríceps en polea</h3>
+        <p class="ex__note">Codos fijos al costado, extendé completo.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="B4" aria-pressed="false"
+              aria-label="Marcar Extensión de tríceps en polea como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">2 × 10-12</span>
+      <span class="tag">RIR 2-3</span>
+      <span class="tag">descanso 60 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Extensión de tríceps en polea serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Extensión de tríceps en polea serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Extensión de tríceps en polea serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Extensión de tríceps en polea serie 2: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article></div>
+  <div class="callout mt-3">
+    <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
+    <div>RIR 3-4 siempre: nunca al fallo. Exhalá en el esfuerzo, levantate y sentate lento.</div>
+  </div>
+</section><section data-day="C" hidden class="section">
+  <div class="card card--tight">
+    <div class="between">
+      <div>
+        <p class="kicker">Día C · Mesociclo 1</p>
+        <p class="strong mt-1">Piernas + espalda</p>
+      </div>
+      <span class="badge" data-progress-label>0 de 4 hechos</span>
+    </div>
+    <div class="bar bar--thick mt-3" data-progress style="--v:0%"><i></i></div>
+    <p class="hint mt-2">Prensa, press inclinado y remos</p>
+  </div>
+  <div class="stack mt-3"><article class="ex" data-ex="C1">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Prensa+de+piernas+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Prensa de piernas</h3>
+        <p class="ex__note">Mismo rango que el día A: buscá sentir la pierna.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="C1" aria-pressed="false"
+              aria-label="Marcar Prensa de piernas como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Prensa de piernas serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Prensa de piernas serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="C2">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Press+inclinado+con+mancuernas+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Press inclinado con mancuernas</h3>
+        <p class="ex__note">Banco a 30°, bajada controlada.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="C2" aria-pressed="false"
+              aria-label="Marcar Press inclinado con mancuernas como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 2 min</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press inclinado con mancuernas serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press inclinado con mancuernas serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press inclinado con mancuernas serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press inclinado con mancuernas serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Press inclinado con mancuernas serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Press inclinado con mancuernas serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="C3">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Remo+unilateral+con+mancuerna+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Remo unilateral con mancuerna</h3>
+        <p class="ex__note">Apoyá la mano, tirá con el codo pegado.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="C3" aria-pressed="false"
+              aria-label="Marcar Remo unilateral con mancuerna como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 90 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo unilateral con mancuerna serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo unilateral con mancuerna serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo unilateral con mancuerna serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo unilateral con mancuerna serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo unilateral con mancuerna serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo unilateral con mancuerna serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article><article class="ex" data-ex="C4">
+  <div class="ex__media">
+    <svg class="i i--xl" aria-hidden="true"><use href="#i-image"/></svg>
+    <span>Imagen o GIF pendiente</span>
+    <a class="btn btn--secondary btn--sm ex__play" href="https://www.youtube.com/results?search_query=Remo+en+polea+baja+sentado+tecnica+correcta" target="_blank" rel="noopener noreferrer">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-play"/></svg>Ver video
+    </a>
+  </div>
+  <div class="ex__body">
+    <div class="ex__top">
+      <div style="min-width:0">
+        <h3 class="ex__name">Remo en polea baja sentado</h3>
+        <p class="ex__note">Pecho arriba, sin encorvar la espalda.</p>
+      </div>
+      <button class="checkbtn" type="button" data-check="C4" aria-pressed="false"
+              aria-label="Marcar Remo en polea baja sentado como completado"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+    </div>
+    <div class="ex__tags">
+      <span class="tag">3 × 10-12</span>
+      <span class="tag">RIR 3-4</span>
+      <span class="tag">descanso 90 s</span>
+    </div>
+    <details class="series">
+      <summary class="btn btn--secondary btn--sm w-full">
+        <span>Registrar series</span><svg class="i i--sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </summary>
+      <div class="mt-3">
+        <div class="series__grid">
+          <span class="series__label">Serie</span>
+          <span class="series__label">kg</span>
+          <span class="series__label">reps</span>
+        </div>
+        <div class="series__grid">
+  <span class="series__label">S1</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo en polea baja sentado serie 1: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo en polea baja sentado serie 1: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S2</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo en polea baja sentado serie 2: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo en polea baja sentado serie 2: repeticiones">
+</div><div class="series__grid">
+  <span class="series__label">S3</span>
+  <input class="input" type="number" inputmode="decimal" min="0" step="0.5" placeholder="kg"
+         aria-label="Remo en polea baja sentado serie 3: peso en kilos">
+  <input class="input" type="number" inputmode="numeric" min="0" step="1" placeholder="reps"
+         aria-label="Remo en polea baja sentado serie 3: repeticiones">
+</div>
+        <p class="hint mt-3">Progresión: subí reps de 10 a 12 y recién ahí +5 % de peso.</p>
+      </div>
+    </details>
+  </div>
+</article></div>
+  <div class="callout mt-3">
+    <svg class="i" aria-hidden="true"><use href="#i-info"/></svg>
+    <div>RIR 3-4 siempre: nunca al fallo. Exhalá en el esfuerzo, levantate y sentate lento.</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <p class="card__title">Cardio y pendientes</p>
+    <div class="kv mt-2"><span class="kv__k">Caminata</span><span class="kv__v">20–30 min · martes y jueves</span></div>
+    <div class="kv"><span class="kv__k">Eco de control</span><span class="kv__v"><span class="badge badge--warn">pendiente</span></span></div>
+    <div class="kv"><span class="kv__k">Frecuencia</span><span class="kv__v">3 días/semana</span></div>
+  </div>
+</section>
+
+<footer class="empty"><svg class="i" aria-hidden="true"><use href="#i-dumbbell"/></svg>Si algo duele, paramos y consultamos. El plan no es una orden médica.</footer>
+    </main>
+  </div>
+  <nav class="bottomnav" aria-label="Navegación principal"><a class="bottomnav__item" href="index.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></span><span>Hoy</span></a><a class="bottomnav__item" href="comidas.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-utensils"/></svg></span><span>Comidas</span></a><a class="bottomnav__item" href="rutina.html" aria-current="page"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-dumbbell"/></svg></span><span>Rutina</span></a><a class="bottomnav__item" href="progreso.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg></span><span>Progreso</span></a><a class="bottomnav__item" href="perfil.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg></span><span>Perfil</span></a></nav>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <script src="js/demo.js" defer></script>
+</body>
+</html>

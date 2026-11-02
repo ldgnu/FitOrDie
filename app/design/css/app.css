@@ -1,0 +1,230 @@
+/* ==========================================================================
+   FitOrDie — Punto de entrada CSS
+   El backend Go solo necesita referenciar este archivo:
+       <link rel="stylesheet" href="/css/app.css">
+   Este archivo importa el sistema completo (tokens → base → componentes).
+   Para producción se puede concatenar los 4 archivos en uno solo.
+   ========================================================================== */
+
+@import url("tokens.css");
+@import url("base.css");
+@import url("components.css");
+
+/* Ajustes propios de pantalla que no son componentes reutilizables */
+
+/* --------------------------------------------------------------------------
+   Icono del switch de tema: muestra el tema al que vas a cambiar
+   -------------------------------------------------------------------------- */
+.theme-moon { display: none; }
+[data-theme="light"] .theme-sun { display: none; }
+[data-theme="light"] .theme-moon { display: block; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .theme-sun { display: none; }
+  :root:not([data-theme]) .theme-moon { display: block; }
+}
+
+/* --------------------------------------------------------------------------
+   <details> de series: sin marcador nativo, chevron que rota
+   -------------------------------------------------------------------------- */
+details.series > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+details.series > summary::-webkit-details-marker { display: none; }
+details.series > summary .chev { transition: transform var(--dur-2) var(--ease); }
+details.series[open] > summary .chev { transform: rotate(180deg); }
+details.series[open] > summary { color: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   Comidas: el resumen fijo no tapa la última entrada
+   -------------------------------------------------------------------------- */
+body[data-page="comidas"] .app-main {
+  padding-bottom: calc(var(--nav-h) + 6.75rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 900px) {
+  body[data-page="comidas"] .app-main { padding-bottom: 7rem; }
+}
+
+/* Hoy — hero con anillo */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.hero__side {
+  min-width: 0;
+  flex: 1;
+}
+.hero__kcal {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.hero__kcal small {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  color: var(--text-mute);
+  letter-spacing: 0;
+}
+.hero__state {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--sp-3);
+}
+
+/* Hoy — peso + sparkline */
+.weigh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+.weigh__v {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.weigh__v small {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-mute);
+  letter-spacing: 0;
+}
+.weigh__spark {
+  width: 7.5rem;
+  flex: none;
+}
+
+/* Comidas — barra de comidas sticky */
+.mealbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  margin-inline: calc(-1 * var(--gutter));
+  padding: var(--sp-2) var(--gutter) var(--sp-3);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+/* Comidas — panel de cálculo */
+.calc {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+.calc__cell {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) 2px;
+  text-align: center;
+}
+.calc__v {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.calc__l {
+  font-size: 0.6875rem;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.calc__cell--kcal .calc__v { color: var(--accent-text); }
+.calc__cell--p .calc__v { color: var(--protein); }
+.calc__cell--c .calc__v { color: var(--carbs); }
+.calc__cell--g .calc__v { color: var(--fat); }
+
+/* Comidas — resultados */
+.results {
+  max-height: 17rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: var(--sp-2);
+}
+
+/* Rutina — tabs de día */
+.daytabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+.daytab {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 3.75rem;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: left;
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+.daytab__k {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.daytab__n {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+.daytab[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+.daytab[aria-pressed="true"] .daytab__k,
+.daytab[aria-pressed="true"] .daytab__n { color: var(--accent-text); }
+
+/* Progreso — hero de peso */
+.bigv {
+  font-size: var(--fs-display);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.bigv small {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--text-mute);
+  letter-spacing: 0;
+}
+
+/* Perfil — bloque identidad */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.identity .avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: var(--fs-lg);
+  border-radius: var(--r-lg);
+}

@@ -25,3 +25,23 @@ web/scripts/load-*.mts
 # uploads locales (fotos): jamás commitear
 uploads/
 web/uploads/
+
+# Go build & runtime (app/)
+app/bin/
+app/logs/
+app/fitordie.db
+app/data/*.db
+app/data/*.db-wal
+app/data/*.db-shm
+app/coverage.out
+!app/.env.example
+
+# SQLite (datos personales: comidas, pesos) — jamás commitear
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# backup local del CSS viejo (no es fuente)
+app/*.slop-backup.css

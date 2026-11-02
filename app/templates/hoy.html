@@ -1,0 +1,280 @@
+{{define "content"}}
+<header class="head">
+  <p class="kicker">{{.DayLabel}}</p>
+  <h1>Hoy</h1>
+</header>
+
+<div class="chips" role="group" aria-label="Cambiar de día">
+  <a class="chip" href="/?date={{.Prev}}">← {{dmy .Prev}}</a>
+  {{if .IsToday}}
+  <span class="chip" aria-current="true">hoy</span>
+  {{else}}
+  <a class="chip" href="/">hoy</a>
+  {{end}}
+  <a class="chip" href="/?date={{.Next}}">{{dmy .Next}} →</a>
+</div>
+
+<section class="card">
+  <p class="kicker">Calorías</p>
+  <p class="hero">
+    <span class="big num">{{num .Totals.Kcal}}</span>
+    <span class="of">de {{num .Targets.KcalMin}}–{{num .Targets.KcalMax}} kcal</span>
+  </p>
+  <div class="bar{{if .KcalOver}} bar--over{{end}}"><i style="width:{{pct .KcalBarPct}}%"></i></div>
+  <p class="hint" style="margin-top:8px">
+    {{if .KcalOver}}Pasaste el máximo por {{num .KcalOverBy}} kcal{{else}}Te quedan {{num .Remaining}} kcal{{end}}
+  </p>
+
+  <div class="macros">
+    <div class="macro">
+      <div class="top">
+        <span class="k">Proteína</span>
+        <span class="v num">{{dg .Totals.Protein}} g<small>de {{num .Targets.ProteinMin}}–{{num .Targets.ProteinMax}}</small></span>
+      </div>
+      <div class="bar bar--p{{if .ProteinOver}} bar--over{{end}}"><i style="width:{{pct .ProteinPct}}%"></i></div>
+    </div>
+    <div class="macro">
+      <div class="top">
+        <span class="k">Carbos</span>
+        <span class="v num">{{dg .Totals.Carbs}} g<small>de {{num .Targets.CarbTarget}}</small></span>
+      </div>
+      <div class="bar bar--c"><i style="width:{{pct .CarbPct}}%"></i></div>
+    </div>
+    <div class="macro">
+      <div class="top">
+        <span class="k">Grasas</span>
+        <span class="v num">{{dg .Totals.Fat}} g<small>de {{num .Targets.FatTarget}}</small></span>
+      </div>
+      <div class="bar bar--g"><i style="width:{{pct .FatPct}}%"></i></div>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:14px">Fibra {{dg .Totals.Fiber}} g · sodio {{num .Totals.Sodium}} mg</p>
+</section>
+
+{{/* ---------------------------------------------------- cargar comida */}}
+<section class="card" id="cargar">
+  <div class="card__head">
+    <h2>¿Qué comiste?</h2>
+    <span class="hint">{{if .IsToday}}hoy{{else}}{{dmy .Date}}{{end}}</span>
+  </div>
+
+  <form class="form" method="post" action="/hoy/analizar">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="hidden" name="date" value="{{.Date}}">
+    <div class="field field--grow">
+      <label class="lbl" for="f-texto">Escribilo como te sale</label>
+      <textarea id="f-texto" name="text" rows="2" maxlength="600" required
+        placeholder="150 g de pollo, una taza de arroz y ensalada">{{with .Analyze}}{{.Text}}{{end}}</textarea>
+    </div>
+    <div class="field">
+      <label class="lbl" for="f-comida">Comida</label>
+      <select id="f-comida" name="meal">
+        {{$meal := ""}}{{with .Analyze}}{{$meal = .Meal}}{{end}}
+        {{range .Meals}}
+        <option value="{{.Key}}"{{if eq .Key $meal}} selected{{end}}>{{.Label}}</option>
+        {{end}}
+      </select>
+    </div>
+    <div class="field field--action">
+      <button class="btn btn--accent" type="submit">Analizar</button>
+    </div>
+  </form>
+
+  {{with .Preview}}
+  <div class="preview">
+    <div class="preview__head">
+      <p class="kicker">Detectado</p>
+      <span class="badge{{if eq .Source "llm"}} badge--ok{{end}}">{{if eq .Source "llm"}}modelo{{else}}parser local{{end}}</span>
+    </div>
+    {{if .Note}}<p class="hint">{{.Note}}</p>{{end}}
+
+    {{if .Items}}
+    <form method="post" action="/hoy/confirmar">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <input type="hidden" name="date" value="{{$.Date}}">
+      <input type="hidden" name="meal" value="{{.Meal}}">
+      <input type="hidden" name="text" value="{{.Text}}">
+      <input type="hidden" name="items" value="{{len .Items}}">
+      <ul class="pitems">
+        {{range .Items}}
+        <li class="pitem">
+          <input type="hidden" name="name_{{.Index}}" value="{{.Name}}">
+          <input type="hidden" name="food_id_{{.Index}}" value="{{.FoodID}}">
+          <span class="pitem__name">{{.Name}}</span>
+          <label class="pitem__g">
+            <input type="number" name="grams_{{.Index}}" value="{{.Grams}}" min="1" max="5000" step="1" inputmode="decimal" aria-label="Gramos de {{.Name}}">
+            <span>g</span>
+          </label>
+          <span class="pitem__m num">{{num .Macros.Kcal}} kcal · P {{dg .Macros.Protein}} · C {{dg .Macros.Carbs}} · G {{dg .Macros.Fat}}</span>
+          <label class="pitem__x"><input type="checkbox" name="quitar_{{.Index}}" value="1"> quitar</label>
+        </li>
+        {{end}}
+      </ul>
+      <p class="hint num">Total detectado: {{num .Totals.Kcal}} kcal · P {{dg .Totals.Protein}} g · C {{dg .Totals.Carbs}} g · G {{dg .Totals.Fat}} g</p>
+      <button class="btn btn--accent" type="submit">Confirmar y cargar</button>
+    </form>
+    {{end}}
+
+    {{if .Unmatched}}
+    <p class="hint">
+      No reconocí:
+      {{range $i, $u := .Unmatched}}{{if $i}} · {{end}}{{$u.Text}}{{end}}.
+      Cargalos abajo a mano.
+    </p>
+    {{end}}
+  </div>
+  {{end}}
+
+  <details class="more">
+    <summary>Buscar en la base o cargar a mano</summary>
+
+    <form class="form form--inline" method="get" action="/">
+      <input type="hidden" name="date" value="{{.Date}}">
+      <div class="field field--grow">
+        <label class="lbl" for="f-q">Buscar alimento</label>
+        <input id="f-q" type="search" name="q" value="{{.Query}}" maxlength="80" placeholder="pollo, arroz, huevo…">
+      </div>
+      <div class="field field--action">
+        <button class="btn" type="submit">Buscar</button>
+      </div>
+    </form>
+
+    {{if .Foods}}
+    <ul class="foods">
+      {{range .Foods}}
+      <li class="food">
+        <form class="food__form" method="post" action="/hoy/alimento">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <input type="hidden" name="date" value="{{$.Date}}">
+          <input type="hidden" name="food_id" value="{{.ID}}">
+          <span class="food__name">{{.Name}}<span class="hint"> · {{num .Per100.Kcal}} kcal/100 g</span></span>
+          <input type="number" name="grams" value="100" min="1" max="5000" step="1" inputmode="decimal" aria-label="Gramos de {{.Name}}">
+          <select name="meal" aria-label="Comida">
+            {{range $.Meals}}<option value="{{.Key}}">{{.Label}}</option>{{end}}
+          </select>
+          <button class="sbtn" type="submit">Cargar</button>
+        </form>
+      </li>
+      {{end}}
+    </ul>
+    {{else if .Query}}
+    <p class="empty">No encontré «{{.Query}}» en la base.</p>
+    {{end}}
+
+    <form class="form" method="post" action="/hoy/manual">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <input type="hidden" name="date" value="{{.Date}}">
+      <p class="kicker">Carga manual (valores por 100 g)</p>
+      <div class="field field--grow">
+        <label class="lbl" for="m-name">Alimento</label>
+        <input id="m-name" type="text" name="name" maxlength="120" required
+          value="{{with .Manual}}{{.Name}}{{end}}" placeholder="Ej: tarta de espinaca casera">
+      </div>
+      <div class="field">
+        <label class="lbl" for="m-meal">Comida</label>
+        <select id="m-meal" name="meal">
+          {{$mm := ""}}{{with .Manual}}{{$mm = .Meal}}{{end}}
+          {{range .Meals}}<option value="{{.Key}}"{{if eq .Key $mm}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="m-grams">Porción (g)</label>
+        <input id="m-grams" type="number" name="grams" min="1" max="5000" step="1" required
+          value="{{with .Manual}}{{.Grams}}{{end}}" placeholder="150">
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="m-kcal">kcal/100</label>
+        <input id="m-kcal" type="number" name="kcal" min="0" max="950" step="1" inputmode="decimal"
+          value="{{with .Manual}}{{.Kcal}}{{end}}" placeholder="180">
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="m-prot">Prot/100</label>
+        <input id="m-prot" type="number" name="protein" min="0" max="100" step="0.1" inputmode="decimal"
+          value="{{with .Manual}}{{.Protein}}{{end}}" placeholder="12">
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="m-fat">Grasa/100</label>
+        <input id="m-fat" type="number" name="fat" min="0" max="100" step="0.1" inputmode="decimal"
+          value="{{with .Manual}}{{.Fat}}{{end}}" placeholder="8">
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="m-carb">Carbo/100</label>
+        <input id="m-carb" type="number" name="carbs" min="0" max="100" step="0.1" inputmode="decimal"
+          value="{{with .Manual}}{{.Carbs}}{{end}}" placeholder="5">
+      </div>
+      <div class="field field--action">
+        <button class="btn btn--accent" type="submit">Cargar a mano</button>
+      </div>
+    </form>
+  </details>
+</section>
+
+{{/* ---------------------------------------------------- comidas del día */}}
+<section class="card">
+  <div class="card__head">
+    <h2>Comidas</h2>
+    <span class="hint">{{len .MealsWithEntries}} de {{len .Meals}}</span>
+  </div>
+  {{range .Meals}}
+  <div class="meal{{if not .Entries}} is-empty{{end}}">
+    <div class="meal__top">
+      <span class="meal__name">{{.Label}}</span>
+      {{if .Time}}<span class="meal__time">{{.Time}}</span>{{end}}
+      <span class="meal__kcal num">{{if .Entries}}{{num .Totals.Kcal}}{{else}}—{{end}}</span>
+    </div>
+    {{if .Entries}}
+    <ul class="rows">
+      {{range .Entries}}
+      <li class="row--entry">
+        <span>{{.FoodName}}</span>
+        <span class="dim num">{{dg .Grams}} g · {{num .Macros.Kcal}} kcal</span>
+        <form class="rowdel" method="post" action="/hoy/borrar">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <input type="hidden" name="date" value="{{$.Date}}">
+          <input type="hidden" name="entry_id" value="{{.ID}}">
+          <button type="submit" class="xbtn" title="Borrar {{.FoodName}}" aria-label="Borrar {{.FoodName}}">×</button>
+        </form>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty">Sin registrar</p>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+
+<section class="card">
+  <div class="card__head">
+    <h2>Peso</h2>
+    <span class="hint">objetivo {{num .Profile.TargetWeightMin}}–{{num .Profile.TargetWeightMax}} kg</span>
+  </div>
+  <p class="hero" style="margin-top:10px">
+    <span class="big num">{{kg .NowKg}}</span>
+    <span class="of">kg</span>
+  </p>
+  <p class="hint" style="margin-top:6px">
+    {{if .HasWeek}}
+      {{if lt .WeekDelta 0.0}}<span class="badge badge--ok">{{kg .WeekDelta}} kg</span>
+      {{else if gt .WeekDelta 0.0}}<span class="badge badge--warn">+{{kg .WeekDelta}} kg</span>
+      {{else}}<span class="badge">sin cambios</span>{{end}} en 7 días
+    {{else}}Sin comparación de 7 días todavía{{end}}
+  </p>
+  {{if .HasSpark}}
+  <svg class="spark" viewBox="0 0 320 110" role="img"
+       aria-label="Tendencia de peso: de {{.SparkFirst}} a {{.SparkLast}} kg">
+    <defs>
+      <linearGradient id="fillHoy" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="{{.SparkArea}}" fill="url(#fillHoy)"/>
+    <path class="spark__line" d="{{.SparkLine}}"/>
+  </svg>
+  {{end}}
+  <a class="btn" href="/progreso#peso">Cargar peso</a>
+</section>
+
+<p class="foot">Cargá desde acá o por el chat de Qwerty.</p>
+{{end}}

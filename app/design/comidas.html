@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Comidas · FitOrDie</title>
+  <meta name="description" content="FitOrDie — diario de comidas, macros y rutina. App personal.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0f0e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitOrDie">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("fitordie:demo:v1");
+        if (raw) {
+          var st = JSON.parse(raw);
+          if (st && st.theme) document.documentElement.setAttribute("data-theme", st.theme);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  
+</head>
+<body data-page="comidas">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol><symbol id="i-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a2.5 2.5 0 0 0 5 0V3M8.5 11.5V21M17 3v18M17 3c2.2 1.2 3.2 3.2 3.2 5.6 0 2.3-1 4.1-3.2 4.4"/></symbol><symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></symbol><symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16M8 16l3.5-4 3 2.5L20 8"/></symbol><symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></symbol><symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/></symbol><symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M4.2 19.8l1.4-1.4"/><circle cx="12" cy="12" r="4.5"/></symbol><symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol><symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></symbol><symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol><symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM18 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 20H3zM12 10v4.5M12 17.4h.01"/></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 8h.01"/></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></symbol><symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M12 3v4M7.5 7 4 15h7zM16.5 7 13 15h7z"/></symbol><symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 5 5.5 5 9a5 5 0 0 1-10 0c0-2 .8-3.4 2-5 .4 1.5 1 2 2 2 .5-2 .5-4 1-6z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></symbol><symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 11l4 4 4-4M5 20h14"/></symbol><symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 15.5l4.2-4 3.1 3 3-2.2 6.2 6.2"/><circle cx="9" cy="9" r="1.3"/></symbol><symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></symbol><symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></symbol><symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol><symbol id="i-youtube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></symbol><symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M4 12h16M4 17.5h10"/></symbol><symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l5.5 5.5L13 9l7 7M20 12.5V16h-3.5"/></symbol><symbol id="i-camera-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><path d="M4 20 20 4"/></symbol><symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14.5 5.5 18.5 9.5"/></symbol><symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H5v14h4M15 8l4 4-4 4M19 12H9"/></symbol><symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v6c0 4.5-3 7.6-7.5 9-4.5-1.4-7.5-4.5-7.5-9V6z"/></symbol><symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5a15 15 0 0 1 19 0M5.5 12a10.5 10.5 0 0 1 13 0M8.5 15.4a6 6 0 0 1 7 0M12 19h.01"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 5 13h5l-1 9 8-11h-5z"/></symbol></svg>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <nav class="railnav" aria-label="Navegación principal">
+  <div class="railnav__brand"><span class="avatar">FD</span><span>FitOrDie</span></div>
+  <a class="railnav__item" href="index.html"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Hoy</span></a><a class="railnav__item" href="comidas.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-utensils"/></svg><span>Comidas</span></a><a class="railnav__item" href="rutina.html"><svg class="i" aria-hidden="true"><use href="#i-dumbbell"/></svg><span>Rutina</span></a><a class="railnav__item" href="progreso.html"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg><span>Progreso</span></a><a class="railnav__item" href="perfil.html"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span>Perfil</span></a>
+  <div class="railnav__foot">Plan Fran · Mesociclo 1<br>v0.1 · prototipo UI</div>
+</nav>
+  <div class="app-shell">
+    <main class="app-main" id="main">
+<header class="pagehead">
+  <div>
+    <p class="kicker">jueves 22 de octubre</p>
+    <h1 class="pagehead__title">Comidas</h1>
+    <p class="pagehead__sub">Hoy: 1.569 de 2.150 kcal</p>
+  </div>
+  <div class="pagehead__actions"><button class="iconbtn iconbtn--accent" type="button" id="open-ai" aria-label="Estimar con IA"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg></button><button class="iconbtn" type="button" data-theme-toggle aria-label="Cambiar entre tema claro y oscuro"><svg class="i theme-sun" aria-hidden="true"><use href="#i-sun"/></svg><svg class="i theme-moon" aria-hidden="true"><use href="#i-moon"/></svg></button></div>
+</header>
+
+
+<div class="mealbar">
+  <div class="chips" role="group" aria-label="¿En qué comida lo cargás?"><button class="chip" type="button" data-slot="desayuno" aria-pressed="false">Desayuno</button><button class="chip" type="button" data-slot="media" aria-pressed="false">Media mañana</button><button class="chip" type="button" data-slot="almuerzo" aria-pressed="true">Almuerzo</button><button class="chip" type="button" data-slot="merienda" aria-pressed="false">Merienda</button><button class="chip" type="button" data-slot="cena" aria-pressed="false">Cena</button><button class="chip" type="button" data-slot="picoteo" aria-pressed="false">Picoteo</button></div>
+</div>
+
+<div class="grid-page">
+<section class="card">
+  <div class="between mb-3">
+    <div>
+      <p class="card__title">Buscar alimento</p>
+      <p class="hint">Tabla local · valores por 100 g</p>
+    </div>
+    <button class="btn btn--soft btn--sm" type="button" data-mock="Cámara: pendiente en esta fase (la IA de foto usa LLM_BASE_URL)">
+      <svg class="i i--sm" aria-hidden="true"><use href="#i-camera"/></svg>Foto
+    </button>
+  </div>
+  <div class="input-wrap">
+    <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+    <input class="input" id="search" type="search" inputmode="search" autocomplete="off"
+           enterkeyhint="search" placeholder="Pollo, arroz, yogur…" aria-label="Buscar alimento en la tabla">
+  </div>
+  <p class="hint mt-2">Cargando en <strong class="accent" id="target-slot">Almuerzo</strong> · elegí otra comida arriba</p>
+  <div class="results" id="results" role="listbox" aria-label="Resultados">
+    <button class="food" data-food="Huevo">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Huevo</span>
+    <span class="food__meta">155 kcal · P 13,0 · C 1,1 · G 11,0 /100 g</span>
+  </span>
+  <span class="food__cal">155<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Pollo pechuga">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Pollo pechuga</span>
+    <span class="food__meta">165 kcal · P 31,0 · C 0,0 · G 3,6 /100 g</span>
+  </span>
+  <span class="food__cal">165<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Yogur griego sin azúcar">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Yogur griego sin azúcar</span>
+    <span class="food__meta">97 kcal · P 9,0 · C 4,0 · G 5,0 /100 g</span>
+  </span>
+  <span class="food__cal">97<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Arroz blanco cocido">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Arroz blanco cocido</span>
+    <span class="food__meta">130 kcal · P 2,7 · C 28,0 · G 0,3 /100 g</span>
+  </span>
+  <span class="food__cal">130<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Banana">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Banana</span>
+    <span class="food__meta">89 kcal · P 1,1 · C 23,0 · G 0,3 /100 g</span>
+  </span>
+  <span class="food__cal">89<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Queso cremoso">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Queso cremoso</span>
+    <span class="food__meta">300 kcal · P 18,0 · C 2,0 · G 24,0 /100 g</span>
+  </span>
+  <span class="food__cal">300<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Aceite de oliva">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Aceite de oliva</span>
+    <span class="food__meta">884 kcal · P 0,0 · C 0,0 · G 100,0 /100 g</span>
+  </span>
+  <span class="food__cal">884<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button><button class="food" data-food="Avena">
+  <span style="min-width:0;flex:1">
+    <span class="food__name">Avena</span>
+    <span class="food__meta">389 kcal · P 17,0 · C 66,0 · G 7,0 /100 g</span>
+  </span>
+  <span class="food__cal">389<br><span class="text-xs mute">kcal</span></span>
+  <span class="iconbtn iconbtn--plain" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>
+</button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2>Cargado hoy</h2>
+    <span class="badge">11 ítems</span>
+  </div>
+  <div class="card card--pad0" style="padding:0 1rem 0.5rem">
+    <div id="day-list"><div class="hist__week" style="padding-top:16px">Desayuno<span class="badge">356 kcal</span></div><div class="entry" data-entry="seed0">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Huevo</div>
+    <div class="entry__qty">3 unidad · 150 g</div>
+  </div>
+  <div class="entry__macros">232 kcal<br>P 20 · C 2 · G 16</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed0" aria-label="Borrar Huevo"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed1">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Queso cremoso</div>
+    <div class="entry__qty">40 g · 40 g</div>
+  </div>
+  <div class="entry__macros">120 kcal<br>P 7 · C 1 · G 10</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed1" aria-label="Borrar Queso cremoso"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed2">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Café negro</div>
+    <div class="entry__qty">1 taza · 200 g</div>
+  </div>
+  <div class="entry__macros">4 kcal<br>P 1 · C 0 · G 0</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed2" aria-label="Borrar Café negro"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="hist__week" style="padding-top:16px">Media mañana<span class="badge">263 kcal</span></div><div class="entry" data-entry="seed3">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Yogur griego sin azúcar</div>
+    <div class="entry__qty">1 pote · 170 g</div>
+  </div>
+  <div class="entry__macros">165 kcal<br>P 15 · C 7 · G 8</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed3" aria-label="Borrar Yogur griego sin azúcar"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed4">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Nueces</div>
+    <div class="entry__qty">15 g · 15 g</div>
+  </div>
+  <div class="entry__macros">98 kcal<br>P 2 · C 2 · G 10</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed4" aria-label="Borrar Nueces"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="hist__week" style="padding-top:16px">Almuerzo<span class="badge">677 kcal</span></div><div class="entry" data-entry="seed5">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Pollo pechuga</div>
+    <div class="entry__qty">200 g · 200 g</div>
+  </div>
+  <div class="entry__macros">330 kcal<br>P 62 · C 0 · G 7</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed5" aria-label="Borrar Pollo pechuga"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed6">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Arroz blanco cocido</div>
+    <div class="entry__qty">190 g · 190 g</div>
+  </div>
+  <div class="entry__macros">247 kcal<br>P 5 · C 53 · G 1</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed6" aria-label="Borrar Arroz blanco cocido"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed7">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Lechuga</div>
+    <div class="entry__qty">80 g · 80 g</div>
+  </div>
+  <div class="entry__macros">12 kcal<br>P 1 · C 2 · G 0</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed7" aria-label="Borrar Lechuga"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed8">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Aceite de oliva</div>
+    <div class="entry__qty">1 cucharada · 10 g</div>
+  </div>
+  <div class="entry__macros">88 kcal<br>P 0 · C 0 · G 10</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed8" aria-label="Borrar Aceite de oliva"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="hist__week" style="padding-top:16px">Merienda<span class="badge">272 kcal</span></div><div class="entry" data-entry="seed9">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Banana</div>
+    <div class="entry__qty">1 unidad · 120 g</div>
+  </div>
+  <div class="entry__macros">107 kcal<br>P 1 · C 28 · G 0</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed9" aria-label="Borrar Banana"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div><div class="entry" data-entry="seed10">
+  <div style="min-width:0">
+    <div class="entry__name truncate">Yogur griego sin azúcar</div>
+    <div class="entry__qty">1 pote · 170 g</div>
+  </div>
+  <div class="entry__macros">165 kcal<br>P 15 · C 7 · G 8</div>
+  <button class="iconbtn iconbtn--plain" data-del="seed10" aria-label="Borrar Yogur griego sin azúcar"><svg class="i i--sm" aria-hidden="true"><use href="#i-trash"/></svg></button>
+</div></div>
+  </div>
+</section>
+
+<section class="section span-2">
+  <div class="callout callout--warn">
+    <svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>
+    <div><strong>Sin datos = sin datos.</strong> Si un alimento no está en la tabla, no se estima a ojo:
+    se marca como faltante. La IA interpreta texto, los macros salen siempre de la tabla.</div>
+  </div>
+</section>
+
+</div>
+
+<div class="daybar">
+  <div style="min-width:0">
+    <div class="daybar__num" id="daybar-kcal">1.569 <small>/ 2.150 kcal</small></div>
+    <div class="bar mt-2" id="daybar-bar" style="--v:73.0%;width:8rem"><i></i></div>
+  </div>
+  <div class="daybar__macros">
+    <span style="color:var(--protein)" id="daybar-p">P 130 g</span>
+    <span style="color:var(--carbs)" id="daybar-c">C 101 g</span>
+    <span style="color:var(--fat)" id="daybar-f">G 71 g</span>
+  </div>
+</div>
+
+<script type="application/json" id="foods-data">{"foods":[{"id":"aceite-de-oliva","name":"Aceite de oliva","kcal":884,"p":0.0,"c":0.0,"fat":100.0,"fiber":0.0},{"id":"ajo","name":"Ajo","kcal":149,"p":6.4,"c":33.0,"fat":0.5,"fiber":2.1},{"id":"arroz-blanco-cocido","name":"Arroz blanco cocido","kcal":130,"p":2.7,"c":28.0,"fat":0.3,"fiber":0.4},{"id":"arandanos","name":"Arándanos","kcal":57,"p":0.7,"c":14.0,"fat":0.3,"fiber":2.4},{"id":"atun-al-natural-escurrido","name":"Atún al natural escurrido","kcal":130,"p":29.0,"c":0.0,"fat":1.0,"fiber":0.0},{"id":"avena","name":"Avena","kcal":389,"p":17.0,"c":66.0,"fat":7.0,"fiber":10.6},{"id":"azucar","name":"Azúcar","kcal":387,"p":0.0,"c":100.0,"fat":0.0,"fiber":0.0},{"id":"banana","name":"Banana","kcal":89,"p":1.1,"c":23.0,"fat":0.3,"fiber":2.6},{"id":"bife-de-chorizo","name":"Bife de chorizo","kcal":250,"p":26.0,"c":0.0,"fat":16.0,"fiber":0.0},{"id":"carne-picada","name":"Carne picada","kcal":240,"p":24.0,"c":0.0,"fat":16.0,"fiber":0.0},{"id":"carne-vacuna-magra","name":"Carne vacuna magra","kcal":170,"p":26.0,"c":0.0,"fat":7.0,"fiber":0.0},{"id":"cebolla","name":"Cebolla","kcal":40,"p":1.1,"c":9.3,"fat":0.1,"fiber":1.7},{"id":"chimichurri","name":"Chimichurri","kcal":450,"p":1.0,"c":4.0,"fat":48.0,"fiber":2.0},{"id":"chocolate-85","name":"Chocolate 85%","kcal":590,"p":8.0,"c":28.0,"fat":46.0,"fiber":11.0},{"id":"chocolate-amargo-70","name":"Chocolate amargo 70%","kcal":598,"p":7.8,"c":46.0,"fat":42.0,"fiber":11.0},{"id":"coliflor","name":"Coliflor","kcal":25,"p":1.9,"c":5.0,"fat":0.3,"fiber":2.0},{"id":"fideos-secos","name":"Fideos secos","kcal":350,"p":12.0,"c":73.0,"fat":1.5,"fiber":3.0},{"id":"harina-de-almendra","name":"Harina de almendra","kcal":590,"p":21.0,"c":22.0,"fat":50.0,"fiber":12.0},{"id":"huevo","name":"Huevo","kcal":155,"p":13.0,"c":1.1,"fat":11.0,"fiber":0.0},{"id":"jamon-cocido","name":"Jamón cocido","kcal":145,"p":18.0,"c":1.0,"fat":6.0,"fiber":0.0},{"id":"leche-entera","name":"Leche entera","kcal":61,"p":3.2,"c":4.8,"fat":3.3,"fiber":0.0},{"id":"lechuga","name":"Lechuga","kcal":15,"p":1.4,"c":2.9,"fat":0.2,"fiber":1.3},{"id":"limon","name":"Limón","kcal":29,"p":1.1,"c":9.0,"fat":0.3,"fiber":2.8},{"id":"manteca","name":"Manteca","kcal":717,"p":0.9,"c":0.1,"fat":81.0,"fiber":0.0},{"id":"manzana","name":"Manzana","kcal":52,"p":0.3,"c":14.0,"fat":0.2,"fiber":2.4},{"id":"merluza","name":"Merluza","kcal":90,"p":18.0,"c":0.0,"fat":1.0,"fiber":0.0},{"id":"miel","name":"Miel","kcal":304,"p":0.3,"c":82.0,"fat":0.0,"fiber":0.2},{"id":"mollejas","name":"Mollejas","kcal":230,"p":25.0,"c":0.0,"fat":14.0,"fiber":0.0},{"id":"nueces","name":"Nueces","kcal":654,"p":15.0,"c":14.0,"fat":65.0,"fiber":7.0},{"id":"oregano-seco","name":"Orégano seco","kcal":265,"p":9.0,"c":69.0,"fat":4.0,"fiber":38.0},{"id":"palta","name":"Palta","kcal":160,"p":2.0,"c":9.0,"fat":15.0,"fiber":7.0},{"id":"pan-blanco","name":"Pan blanco","kcal":265,"p":9.0,"c":49.0,"fat":3.2,"fiber":2.7},{"id":"papa","name":"Papa","kcal":77,"p":2.0,"c":17.0,"fat":0.1,"fiber":2.2},{"id":"perejil","name":"Perejil","kcal":36,"p":3.0,"c":6.0,"fat":0.8,"fiber":3.3},{"id":"pimiento","name":"Pimiento","kcal":26,"p":1.0,"c":5.3,"fat":0.3,"fiber":1.9},{"id":"pollo-pechuga","name":"Pollo pechuga","kcal":165,"p":31.0,"c":0.0,"fat":3.6,"fiber":0.0},{"id":"queso-crema","name":"Queso crema","kcal":340,"p":6.0,"c":4.0,"fat":34.0,"fiber":0.0},{"id":"queso-cremoso","name":"Queso cremoso","kcal":300,"p":18.0,"c":2.0,"fat":24.0,"fiber":0.0},{"id":"queso-duro","name":"Queso duro","kcal":430,"p":38.0,"c":4.0,"fat":29.0,"fiber":0.0},{"id":"tamari","name":"Tamari","kcal":60,"p":10.0,"c":6.0,"fat":0.0,"fiber":1.0},{"id":"tomate","name":"Tomate","kcal":18,"p":0.9,"c":3.9,"fat":0.2,"fiber":1.2},{"id":"vinagre-de-manzana","name":"Vinagre de manzana","kcal":21,"p":0.0,"c":0.9,"fat":0.0,"fiber":0.0},{"id":"yogur-griego-sin-azucar","name":"Yogur griego sin azúcar","kcal":97,"p":9.0,"c":4.0,"fat":5.0,"fiber":0.0},{"id":"yogur-natural","name":"Yogur natural","kcal":61,"p":3.5,"c":4.7,"fat":3.3,"fiber":0.0},{"id":"zapallitos","name":"Zapallitos","kcal":20,"p":1.0,"c":4.0,"fat":0.3,"fiber":1.0},{"id":"zapallo","name":"Zapallo","kcal":40,"p":1.0,"c":10.0,"fat":0.3,"fiber":1.5},{"id":"mate","name":"Mate","kcal":3,"p":0.2,"c":0.5,"fat":0.0,"fiber":0.0},{"id":"cafe-negro","name":"Café negro","kcal":2,"p":0.3,"c":0.0,"fat":0.0,"fiber":0.0},{"id":"te","name":"Té","kcal":1,"p":0.0,"c":0.3,"fat":0.0,"fiber":0.0}]}</script>
+
+<div class="sheet" id="sheet-food" role="dialog" aria-modal="true" aria-labelledby="ef-name">
+  <div class="sheet__panel">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div style="min-width:0">
+        <p class="sheet__title" id="ef-name">Alimento</p>
+        <p class="sheet__sub" id="ef-meta">—</p>
+      </div>
+      <button class="iconbtn iconbtn--plain" type="button" data-close aria-label="Cerrar"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="field">
+      <label class="label" for="ef-qty">Cantidad <span class="hint" id="ef-grams"></span></label>
+      <div class="stepper">
+        <button type="button" data-step="-10" aria-label="Restar 10"><svg class="i i--sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+        <input id="ef-qty" type="number" min="0" step="1" inputmode="decimal" value="100" aria-describedby="ef-hint">
+        <button type="button" data-step="10" aria-label="Sumar 10"><svg class="i i--sm" aria-hidden="true"><use href="#i-plus"/></svg></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="ef-unit">Medida</label>
+      <select class="input" id="ef-unit">
+        <option value="g">gramos (g)</option>
+      </select>
+    </div>
+
+    <p class="hint mt-3" id="ef-hint">Pesá crudo, como indica el plan.</p>
+
+    <div class="calc" aria-live="polite">
+      <div class="calc__cell calc__cell--kcal"><div class="calc__v" id="ef-kcal">0</div><div class="calc__l">kcal</div></div>
+      <div class="calc__cell calc__cell--p"><div class="calc__v" id="ef-p">0</div><div class="calc__l">prot</div></div>
+      <div class="calc__cell calc__cell--c"><div class="calc__v" id="ef-c">0</div><div class="calc__l">carb</div></div>
+      <div class="calc__cell calc__cell--g"><div class="calc__v" id="ef-g">0</div><div class="calc__l">gras</div></div>
+    </div>
+
+    <div class="sheet__actions btn-row btn-row--2">
+      <button class="btn btn--secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn--primary" type="button" id="ef-add">
+        <svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Sumar a <span id="ef-slot">Almuerzo</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-ai" role="dialog" aria-modal="true" aria-labelledby="ai-title">
+  <div class="sheet__panel">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div>
+        <p class="sheet__title" id="ai-title">Estimar con IA</p>
+        <p class="sheet__sub">Escribí lo que comiste, en tus palabras</p>
+      </div>
+      <button class="iconbtn iconbtn--plain" type="button" data-close aria-label="Cerrar"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="field">
+      <label class="label" for="ai-text">Tu texto</label>
+      <textarea class="input" id="ai-text" rows="3"
+        placeholder="Ej: 250 g de pollo con arroz y ensalada"></textarea>
+      <p class="hint" id="ai-note">El parser local busca los alimentos en la tabla. La IA solo interpreta:
+      si el alimento no está, se avisa y no se inventan macros.</p>
+    </div>
+
+    <div class="mt-4" id="ai-results"></div>
+
+    <div class="sheet__actions btn-row btn-row--2">
+      <button class="btn btn--secondary" type="button" id="ai-estimate"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg>Estimar</button>
+      <button class="btn btn--primary" type="button" id="ai-add-all"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Sumar todo</button>
+    </div>
+  </div>
+</div>
+    </main>
+  </div>
+  <nav class="bottomnav" aria-label="Navegación principal"><a class="bottomnav__item" href="index.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></span><span>Hoy</span></a><a class="bottomnav__item" href="comidas.html" aria-current="page"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-utensils"/></svg></span><span>Comidas</span></a><a class="bottomnav__item" href="rutina.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-dumbbell"/></svg></span><span>Rutina</span></a><a class="bottomnav__item" href="progreso.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg></span><span>Progreso</span></a><a class="bottomnav__item" href="perfil.html"><span class="bottomnav__pill"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg></span><span>Perfil</span></a></nav>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="application/json" id="seed-data">{"entries":[{"name":"Huevo","foodId":"huevo","grams":150.0,"kcal":232.5,"p":19.5,"c":1.7,"f":16.5,"fiber":0.0,"id":"seed0","slot":"desayuno","unit":"unidad","qty":3},{"name":"Queso cremoso","foodId":"queso-cremoso","grams":40.0,"kcal":120.0,"p":7.2,"c":0.8,"f":9.6,"fiber":0.0,"id":"seed1","slot":"desayuno","unit":"g","qty":40},{"name":"Café negro","foodId":"cafe-negro","grams":200.0,"kcal":4.0,"p":0.6,"c":0.0,"f":0.0,"fiber":0.0,"id":"seed2","slot":"desayuno","unit":"taza","qty":1},{"name":"Yogur griego sin azúcar","foodId":"yogur-griego-sin-azucar","grams":170.0,"kcal":164.9,"p":15.3,"c":6.8,"f":8.5,"fiber":0.0,"id":"seed3","slot":"media","unit":"pote","qty":1},{"name":"Nueces","foodId":"nueces","grams":15.0,"kcal":98.1,"p":2.2,"c":2.1,"f":9.8,"fiber":1.1,"id":"seed4","slot":"media","unit":"g","qty":15},{"name":"Pollo pechuga","foodId":"pollo-pechuga","grams":200.0,"kcal":330.0,"p":62.0,"c":0.0,"f":7.2,"fiber":0.0,"id":"seed5","slot":"almuerzo","unit":"g","qty":200},{"name":"Arroz blanco cocido","foodId":"arroz-blanco-cocido","grams":190.0,"kcal":247.0,"p":5.1,"c":53.2,"f":0.6,"fiber":0.8,"id":"seed6","slot":"almuerzo","unit":"g","qty":190},{"name":"Lechuga","foodId":"lechuga","grams":80.0,"kcal":12.0,"p":1.1,"c":2.3,"f":0.2,"fiber":1.0,"id":"seed7","slot":"almuerzo","unit":"g","qty":80},{"name":"Aceite de oliva","foodId":"aceite-de-oliva","grams":10.0,"kcal":88.4,"p":0.0,"c":0.0,"f":10.0,"fiber":0.0,"id":"seed8","slot":"almuerzo","unit":"cucharada","qty":1},{"name":"Banana","foodId":"banana","grams":120.0,"kcal":106.8,"p":1.3,"c":27.6,"f":0.4,"fiber":3.1,"id":"seed9","slot":"merienda","unit":"unidad","qty":1},{"name":"Yogur griego sin azúcar","foodId":"yogur-griego-sin-azucar","grams":170.0,"kcal":164.9,"p":15.3,"c":6.8,"f":8.5,"fiber":0.0,"id":"seed10","slot":"merienda","unit":"pote","qty":1}],"weights":[{"date":"2026-09-23","kg":91.2},{"date":"2026-09-24","kg":91.15},{"date":"2026-09-25","kg":91.03},{"date":"2026-09-26","kg":91.07},{"date":"2026-09-27","kg":90.95},{"date":"2026-09-28","kg":90.87},{"date":"2026-09-29","kg":90.91},{"date":"2026-09-30","kg":90.79},{"date":"2026-10-01","kg":90.7},{"date":"2026-10-02","kg":90.63},{"date":"2026-10-03","kg":90.67},{"date":"2026-10-04","kg":90.53},{"date":"2026-10-05","kg":90.45},{"date":"2026-10-06","kg":90.37},{"date":"2026-10-07","kg":90.41},{"date":"2026-10-08","kg":90.29},{"date":"2026-10-09","kg":90.2},{"date":"2026-10-10","kg":90.13},{"date":"2026-10-11","kg":90.17},{"date":"2026-10-12","kg":90.05},{"date":"2026-10-13","kg":89.97},{"date":"2026-10-14","kg":89.89},{"date":"2026-10-15","kg":89.93},{"date":"2026-10-16","kg":89.81},{"date":"2026-10-17","kg":89.75},{"date":"2026-10-18","kg":89.69},{"date":"2026-10-19","kg":89.73},{"date":"2026-10-20","kg":89.63},{"date":"2026-10-21","kg":89.66},{"date":"2026-10-22","kg":89.65}]}</script>
+  <script src="js/demo.js" defer></script>
+</body>
+</html>

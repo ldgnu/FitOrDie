@@ -1,0 +1,481 @@
+/* FitOrDie — panel de solo lectura.
+   Un solo archivo, mobile-first, sin fuentes ni requests externos.
+   Depende únicamente de CSS: no hay JS en la app. */
+
+:root{
+  --bg:#0a0f0e;--surface:#121a18;--surface2:#182320;--line:#26332f;
+  --text:#eaf2ef;--dim:#a9bbb4;--mute:#7e938b;
+  --accent:#3ddc97;--protein:#5ac8fa;--carbs:#f0b429;--fat:#ff8a8a;
+  --ok:#3ddc97;--warn:#f0b429;--danger:#ff7070;
+  --r:14px;--sp:16px;--nav:4.5rem;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#f4f8f6;--surface:#fff;--surface2:#eef4f1;--line:#dbe5e0;
+    --text:#0d1714;--dim:#3f514a;--mute:#5f746c;
+    --accent:#0b8f5a;--protein:#1a7fb5;--carbs:#a8730a;--fat:#c2453f;
+    --ok:#0b8f5a;--warn:#a8730a;--danger:#c2453f;
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  margin:0;min-height:100dvh;background:var(--bg);color:var(--text);
+  padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom));
+  font:400 17px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none;-webkit-tap-highlight-color:transparent}
+h1,h2,h3,p,ul,ol,dl,dd{margin:0}
+ul,ol{padding:0;list-style:none}
+small{font-size:inherit}
+
+main{
+  max-width:34rem;margin:0 auto;
+  padding:var(--sp) calc(var(--sp) + env(safe-area-inset-right)) var(--sp) calc(var(--sp) + env(safe-area-inset-left));
+}
+
+.skip{position:absolute;left:-999px;top:0;padding:12px 16px;background:var(--surface);color:var(--text);z-index:20}
+.skip:focus{left:8px;top:8px}
+
+/* ---------------------------------------------------------- encabezados */
+.head{margin:2px 0 var(--sp)}
+.kicker{font-size:.8125rem;color:var(--mute);font-weight:500}
+h1{font-size:2rem;line-height:1.15;letter-spacing:-.02em;font-weight:600;margin-top:2px}
+h2{font-size:1.125rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1.0625rem;font-weight:600;line-height:1.25}
+.sub{color:var(--dim);font-size:.9375rem;margin-top:4px}
+.hint{color:var(--mute);font-size:.875rem}
+.dim{color:var(--dim)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------------------------------------------------------- tarjetas */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:var(--sp);margin-bottom:12px;
+}
+.card > h2 + *{margin-top:12px}
+.card__head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+
+/* ---------------------------------------------------------- navegación */
+.chips{display:flex;gap:8px;margin-bottom:12px}
+.chip{
+  flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  color:var(--dim);font-size:.9375rem;font-weight:600;
+}
+.chip[aria-current="true"]{border-color:var(--accent);color:var(--accent)}
+
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);
+}
+.nav a{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:var(--nav);padding:6px 0;color:var(--mute);
+  font-size:.75rem;font-weight:500;
+}
+.nav a[aria-current="page"]{color:var(--accent)}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------------------------------------------------------- números grandes */
+.hero{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:2px}
+.big{font-size:2.75rem;line-height:1;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.of{color:var(--mute);font-size:.9375rem}
+
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.bar--p i{background:var(--protein)}
+.bar--c i{background:var(--carbs)}
+.bar--g i{background:var(--fat)}
+.bar--over i{background:var(--danger)}
+
+.macros{display:grid;gap:16px;margin-top:20px}
+.macro .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.macro .k{font-size:.9375rem;color:var(--dim)}
+.macro .v{font-size:1.0625rem;font-weight:600;font-variant-numeric:tabular-nums}
+.macro .v small{color:var(--mute);font-weight:500;font-size:.8125rem;margin-left:4px}
+
+/* ---------------------------------------------------------- comidas */
+.meal{padding:12px 0;border-top:1px solid var(--line)}
+.meal:first-of-type{border-top:0;padding-top:0}
+.meal__top{display:flex;align-items:baseline;gap:8px}
+.meal__name{font-weight:600}
+.meal__time{color:var(--mute);font-size:.8125rem}
+.meal__kcal{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.meal.is-empty .meal__kcal{color:var(--mute)}
+.rows{margin-top:8px;display:grid;gap:8px}
+.rows li{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:.9375rem}
+.rows .dim{white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Reglas del plan: un solo <span> de texto largo que tiene que poder partirse
+   en varias líneas, si no desborda a lo ancho en el celular. */
+.rows li > span{min-width:0}
+.rows li .dim:only-child{white-space:normal;overflow-wrap:break-word;line-height:1.45}
+.empty{color:var(--mute);font-size:.9375rem;margin-top:6px}
+
+/* ---------------------------------------------------------- gráfico */
+.spark{width:100%;height:auto;display:block;margin-top:6px}
+.spark__line{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.spark__area{fill:var(--accent);opacity:.14}
+.spark text{fill:var(--mute);font-size:11px}
+
+/* ---------------------------------------------------------- rutina */
+.jump{display:flex;gap:8px;margin-bottom:12px}
+.jump a{
+  flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  color:var(--text);font-weight:600;
+}
+.ex{padding:16px 0;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0;padding-top:4px}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.specs > div{background:var(--surface2);border-radius:10px;padding:8px 10px}
+.specs dt{font-size:.75rem;color:var(--mute);font-weight:500}
+.specs dd{font-size:1rem;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.note{margin-top:12px;font-size:.9375rem;color:var(--dim);line-height:1.45}
+.note .lbl{
+  display:block;font-size:.75rem;
+  color:var(--mute);font-weight:500;margin-bottom:4px;
+}
+.last{margin-top:12px;font-size:.9375rem;color:var(--dim)}
+.last b{color:var(--text);font-variant-numeric:tabular-nums}
+.btn{
+  display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:16px;
+  width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface2);
+  color:var(--text);font-family:inherit;font-weight:600;font-size:.9375rem;
+  cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;
+}
+.btn:active{background:var(--line)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn--accent{border-color:var(--accent);color:var(--accent)}
+.badge{display:inline-block;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:600;
+  background:var(--surface2);color:var(--dim)}
+.badge--ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.badge--warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.badge--danger{background:color-mix(in srgb,var(--danger) 20%,transparent);color:var(--danger)}
+
+/* ---------------------------------------------------------- progreso */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.stat{background:var(--surface2);border-radius:12px;padding:10px 12px}
+.stat__v{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+.stat__v small{font-size:.8125rem;font-weight:500;color:var(--mute)}
+.stat__l{font-size:.75rem;color:var(--mute);margin-top:2px}
+.week{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.week__top{display:flex;align-items:baseline;gap:8px}
+.week__label{font-weight:600;font-size:.9375rem}
+.week__top .badge{margin-left:auto}
+.week .rows{margin-top:6px}
+
+/* Pesos y reps: historial por día y mejor serie por semana (Progreso). */
+.pgroup{
+  margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:.75rem;
+  color:var(--mute);font-weight:500;
+}
+.pgroup:first-of-type{margin-top:12px;padding-top:0;border-top:0}
+
+.pday{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.pday:first-of-type{margin-top:10px;padding-top:0;border-top:0}
+.pday__top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pday__date{font-weight:600;font-size:.9375rem;font-variant-numeric:tabular-nums}
+.pday__vol{margin-left:auto;color:var(--mute);font-size:.8125rem;white-space:nowrap}
+.pday .hint{font-size:.8125rem;margin-top:2px}
+
+.pex{margin-top:10px}
+.pex__name{font-size:.9375rem;color:var(--dim);line-height:1.35}
+.pex__sets{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.set{
+  display:inline-flex;align-items:baseline;gap:4px;
+  border-radius:8px;background:var(--surface2);padding:4px 8px;
+  font-size:.8125rem;font-weight:600;font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.set__rir{font-style:normal;font-weight:500;font-size:.6875rem;color:var(--mute)}
+
+.wex{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.wex:first-of-type{margin-top:10px;padding-top:0;border-top:0}
+.wex__name{font-weight:600;font-size:.9375rem}
+.wex__rows{display:grid;gap:8px;margin-top:8px}
+.wrow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.875rem}
+.wrow__k{color:var(--dim);font-variant-numeric:tabular-nums}
+.wrow__v{
+  margin-left:auto;display:inline-flex;align-items:baseline;gap:6px;
+  font-weight:600;font-variant-numeric:tabular-nums;
+}
+.wrow__sub{flex:1 0 100%;margin-top:-2px;color:var(--mute);font-size:.75rem;font-variant-numeric:tabular-nums}
+
+.foot{color:var(--mute);font-size:.8125rem;line-height:1.5;text-align:center;margin:20px 0 8px}
+
+/* ---------------------------------------------------------- modal de video */
+/* Un solo modal para toda la rutina; el iframe se inyecta al click. */
+.vmodal{
+  width:min(calc(100% - 24px),46rem);max-width:46rem;max-height:92dvh;
+  margin:auto;padding:0;border:0;background:transparent;color:var(--text);
+  overflow:visible;
+}
+.vmodal::backdrop{
+  background:#04080799;
+  background:color-mix(in srgb,var(--bg) 78%,transparent);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+}
+.vmodal__box{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;box-shadow:0 16px 48px #00000059;
+}
+.vmodal__top{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.vmodal__title{font-size:1rem;font-weight:600;line-height:1.3;letter-spacing:-.01em;flex:1}
+.vmodal__close{
+  flex:0 0 auto;width:40px;height:40px;margin:-4px -4px 0 0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:10px;background:var(--surface2);
+  color:var(--dim);font-family:inherit;font-size:1.375rem;line-height:1;
+  cursor:pointer;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;
+}
+.vmodal__close:active{background:var(--line)}
+.vmodal__close:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 16:9 responsive: manda el ancho, la altura la calcula el navegador. */
+.vmodal__frame{
+  position:relative;width:100%;aspect-ratio:16/9;
+  border-radius:10px;overflow:hidden;background:#000;
+}
+@supports not (aspect-ratio:16/9){
+  .vmodal__frame{height:0;padding-top:56.25%}
+}
+.vmodal__frame iframe{
+  position:absolute;inset:0;display:block;width:100%;height:100%;border:0;
+}
+.vmodal__foot{margin-top:10px;text-align:right;font-size:.8125rem}
+.vmodal__foot a{color:var(--mute)}
+
+/* Scroll bloqueado mientras el modal está abierto (necesario en iOS Safari). */
+html.is-locked,body.is-locked{overflow:hidden}
+body.is-locked{touch-action:none}
+
+/* ---------------------------------------------------------- login */
+/* Página suelta: sin nav inferior, centrada y cómoda en iOS Safari. */
+body[data-page="login"]{padding-bottom:0;background:var(--bg)}
+main.auth{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100dvh;max-width:34rem;
+  padding:calc(var(--sp) + env(safe-area-inset-top)) calc(var(--sp) + env(safe-area-inset-right)) calc(var(--sp) + env(safe-area-inset-bottom)) calc(var(--sp) + env(safe-area-inset-left));
+}
+.auth__box{width:100%;max-width:21rem}
+.auth__title{font-size:2rem;line-height:1.15;letter-spacing:-.02em;font-weight:600;margin-top:2px}
+.auth__form{margin-top:20px;display:grid;gap:8px}
+.auth__label{
+  font-size:.8125rem;
+  color:var(--mute);font-weight:500;margin-top:8px;
+}
+.auth__input{
+  width:100%;min-height:50px;padding:12px 14px;border-radius:12px;
+  color:var(--text);background:var(--surface);border:1px solid var(--line);
+  /* 17px evita el zoom automático de iOS al enfocar un input. */
+  font:400 17px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  -webkit-appearance:none;appearance:none;
+}
+.auth__input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.auth__input:-webkit-autofill{
+  -webkit-text-fill-color:var(--text);
+  -webkit-box-shadow:0 0 0 100px var(--surface) inset;
+  caret-color:var(--text);
+}
+.auth__btn{
+  min-height:50px;margin-top:16px;border-radius:12px;border:1px solid var(--accent);
+  background:var(--surface2);
+  background:color-mix(in srgb,var(--accent) 18%,transparent);
+  color:var(--accent);font-weight:600;font-size:1.0625rem;
+  cursor:pointer;-webkit-appearance:none;appearance:none;
+}
+.auth__btn:active{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.auth__btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.auth__error{margin-top:10px;color:var(--danger);font-size:.9375rem;line-height:1.45}
+.auth__foot{margin-top:20px;color:var(--mute);font-size:.8125rem;text-align:center}
+
+/* ========================================================== formularios */
+/* Cargas desde la web: mismos controles en celular y escritorio, con targets
+   de 46px de alto y 17px de tipografía (iOS no hace zoom al enfocar). */
+.flash{
+  margin:0 0 12px;padding:10px 12px;border-radius:12px;
+  font-size:.9375rem;line-height:1.4;border:1px solid var(--line);
+  background:var(--surface);color:var(--dim);
+}
+.flash--ok{
+  border-color:color-mix(in srgb,var(--ok) 45%,transparent);
+  background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok);
+}
+.flash--err{
+  border-color:color-mix(in srgb,var(--danger) 45%,transparent);
+  background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger);
+}
+
+.form{display:grid;gap:10px;margin-top:12px}
+.field{display:grid;gap:4px;min-width:0}
+.field--grow{grid-column:1/-1}
+.lbl{font-size:.75rem;color:var(--mute);font-weight:500}
+
+.form input[type=text],.form input[type=search],.form input[type=number],
+.form input[type=date],.form textarea,.form select,
+.food__form input,.food__form select{
+  width:100%;min-width:0;min-height:46px;padding:10px 12px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  font:400 17px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  -webkit-appearance:none;appearance:none;
+}
+.form textarea{min-height:66px;resize:vertical;line-height:1.4}
+.form select{background-image:none}
+.form input:focus,.form textarea:focus,.form select:focus,
+.food__form input:focus,.food__form select:focus{
+  outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);
+}
+.form input::placeholder,.form textarea::placeholder{color:var(--mute)}
+.form .btn{width:100%}
+.form--inline,.form--row{margin-top:10px}
+
+/* --- previsualización del analizador --- */
+.preview{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.preview__head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pitems{display:grid;gap:8px;margin-top:10px}
+.pitem{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;
+  padding:10px 12px;background:var(--surface2);border-radius:12px;
+}
+.pitem__name{font-weight:600;font-size:.9375rem;min-width:0;overflow-wrap:anywhere}
+.pitem__g{display:flex;align-items:center;gap:6px;font-size:.875rem;color:var(--dim)}
+.pitem__g input{
+  width:5.5rem;min-height:40px;padding:6px 8px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--line);color:var(--text);
+  font:600 16px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
+}
+.pitem__m{grid-column:1/-1;font-size:.8125rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.pitem__x{
+  grid-column:1/-1;display:flex;align-items:center;gap:6px;
+  font-size:.8125rem;color:var(--mute);
+}
+.pitem__x input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* --- otros modos de carga --- */
+.more{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+.more > summary{
+  cursor:pointer;color:var(--accent);font-weight:600;font-size:.9375rem;
+  min-height:44px;display:flex;align-items:center;list-style:none;
+}
+.more > summary::-webkit-details-marker{display:none}
+.more > summary::before{content:"+";margin-right:8px;font-weight:700}
+.more[open] > summary::before{content:"−"}
+.more[open] > summary{margin-bottom:8px}
+
+.foods{display:grid;gap:8px;margin-top:12px}
+.food__form{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  padding:10px 12px;background:var(--surface2);border-radius:12px;
+}
+.food__name{flex:1 1 100%;font-size:.9375rem;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.food__form input{flex:0 0 5.5rem;min-height:40px;padding:6px 8px;font-size:16px}
+.food__form select{flex:1 1 8rem;min-height:40px;padding:6px 8px;font-size:16px}
+
+/* --- botón chico (cargar / borrar serie) --- */
+.sbtn{
+  min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface2);color:var(--text);
+  font-family:inherit;font-weight:600;font-size:.8125rem;cursor:pointer;
+  -webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;
+}
+.sbtn:active{background:var(--line)}
+.sbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sbtn--x{
+  color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,transparent);
+  min-width:40px;padding:0 10px;font-size:1rem;line-height:1;
+}
+
+/* --- borrar una entrada del diario o una pesa --- */
+.row--entry{display:flex;align-items:baseline;gap:10px}
+.row--entry > span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.rowdel{flex:0 0 auto;display:inline-flex;margin:0}
+.xbtn{
+  width:32px;height:32px;padding:0;border-radius:9px;
+  border:1px solid var(--line);background:transparent;color:var(--mute);
+  font-family:inherit;font-size:1.125rem;line-height:1;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+}
+.xbtn:hover,.xbtn:focus-visible{color:var(--danger);border-color:var(--danger);outline:none}
+
+/* --- editor de series del día --- */
+.sgroup{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.sgroup:first-of-type{margin-top:10px;padding-top:0;border-top:0}
+.sgroup__top{display:flex;align-items:baseline;gap:8px}
+.sgroup__name{font-weight:600;font-size:.9375rem;min-width:0;overflow-wrap:anywhere}
+.sgroup__top .hint{margin-left:auto;white-space:nowrap}
+.srows{display:grid;gap:6px;margin-top:8px}
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.srow__n{
+  min-width:1.75rem;color:var(--mute);font-size:.75rem;font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.srow input{
+  flex:1 1 4.5rem;width:auto;min-width:0;min-height:40px;padding:6px 8px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  font:600 16px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
+}
+.srow input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+
+/* ========================================================== escritorio */
+/* Desde 900px la app deja de verse como un iPhone: grilla de dos columnas,
+   tipografía más grande y formularios en fila. Mobile-first se mantiene. */
+@media (min-width:900px){
+  body{
+    display:flex;flex-direction:column;padding-bottom:0;
+  }
+  main{
+    width:100%;max-width:1100px;margin:0 auto;
+    display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+    gap:16px;align-items:start;
+  }
+  main > .head,
+  main > .chips,
+  main > .jump,
+  main > .flash,
+  main > .foot,
+  main > .vmodal{grid-column:1/-1}
+  main > .card{margin-bottom:0}
+
+  h1{font-size:2.5rem}
+  h2{font-size:1.25rem}
+  .big{font-size:3.25rem}
+  .hero .of{font-size:1rem}
+
+  /* Nav arriba y horizontal: abajo no tiene sentido en escritorio. */
+  .nav{
+    position:static;order:-1;width:100%;max-width:1100px;margin:0 auto;
+    grid-template-columns:repeat(3,auto);justify-content:center;gap:6px;
+    border-top:0;border-bottom:1px solid var(--line);background:transparent;
+    padding:6px 16px;
+  }
+  .nav a{flex-direction:row;gap:8px;min-height:46px;padding:0 18px;font-size:.9375rem}
+  .nav svg{width:20px;height:20px}
+
+  /* Formularios en fila. */
+  .form--row,.form--inline{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+  .form--row .field--grow,.form--inline .field--grow{flex:1 1 12rem}
+  .form--row .field--narrow{flex:0 0 8rem}
+  .form--row .field--action,.form--inline .field--action{flex:0 0 auto}
+  .form--row .field--action .btn,.form--inline .field--action .btn{width:auto;padding:0 20px}
+
+  /* El analizador también se acomoda en dos columnas internas. */
+  .form{grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+  .form > .field--grow{grid-column:1/-1}
+  .form > .field--action{grid-column:auto;align-self:end}
+  .form > .kicker{grid-column:1/-1}
+
+  .pitem{grid-template-columns:minmax(0,1fr) auto auto}
+  .pitem__m{grid-column:2/3;text-align:right}
+  .pitem__x{grid-column:3/4;justify-self:end}
+  .food__form{flex-wrap:nowrap}
+  .food__name{flex:1 1 auto}
+  .srow input{flex:0 1 6rem}
+}

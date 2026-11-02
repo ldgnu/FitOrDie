@@ -1,0 +1,202 @@
+/* ==========================================================================
+   FitOrDie — Design tokens
+   Capa 1: paleta cruda (--p-*). Capa 2: tokens semánticos (--bg, --surface...).
+   El tema se controla con <html data-theme="dark|light">. Sin JS manda el SO.
+   ========================================================================== */
+
+:root {
+  /* ---------- Paleta cruda: DARK (default) ---------- */
+  --p-bg: #0a0f0e;
+  --p-bg-2: #0e1514;
+  --p-surface: #131c1a;
+  --p-surface-2: #1a2523;
+  --p-surface-3: #22302d;
+  --p-line: #26332f;
+  --p-line-strong: #34433e;
+  --p-text: #eaf2ef;
+  --p-text-dim: #a9bab5;
+  --p-text-mute: #7b8d88;
+  --p-accent: #5be49b;
+  --p-accent-strong: #2ecf86;
+  --p-accent-text: #5be49b;
+  --p-accent-ink: #04231a;
+  --p-protein: #62a8ff;
+  --p-carbs: #f2b24b;
+  --p-fat: #b98cff;
+  --p-danger: #ff7a7a;
+  --p-warn: #ffc65c;
+  --p-glow: rgba(91, 228, 155, 0.16);
+  --p-overlay: rgba(4, 9, 8, 0.66);
+
+  /* ---------- Tokens semánticos (mapeo único) ---------- */
+  --bg: var(--p-bg);
+  --bg-2: var(--p-bg-2);
+  --surface: var(--p-surface);
+  --surface-2: var(--p-surface-2);
+  --surface-3: var(--p-surface-3);
+  --line: var(--p-line);
+  --line-strong: var(--p-line-strong);
+
+  --text: var(--p-text);
+  --text-dim: var(--p-text-dim);
+  --text-mute: var(--p-text-mute);
+  --text-on-accent: var(--p-accent-ink);
+
+  --accent: var(--p-accent);
+  --accent-strong: var(--p-accent-strong);
+  /* verde para TEXTO: en claro es más oscuro para pasar 4.5:1 sobre tintes */
+  --accent-text: var(--p-accent-text);
+  --accent-soft: color-mix(in srgb, var(--p-accent) 14%, transparent);
+  --accent-line: color-mix(in srgb, var(--p-accent) 34%, transparent);
+
+  --protein: var(--p-protein);
+  --carbs: var(--p-carbs);
+  --fat: var(--p-fat);
+  --ok: var(--accent-text);
+  --warn: var(--p-warn);
+  --danger: var(--p-danger);
+
+  --overlay: var(--p-overlay);
+  --ring-focus: color-mix(in srgb, var(--p-accent) 70%, transparent);
+
+  /* ---------- Tipografía ---------- */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Roboto",
+    "Helvetica Neue", "Noto Sans", Arial, sans-serif;
+  --font-num: ui-monospace, "SF Mono", "SFMono-Regular", "Roboto Mono",
+    "DejaVu Sans Mono", monospace;
+
+  --fs-xs: 0.75rem;      /* 12 — labels, captions */
+  --fs-sm: 0.8125rem;    /* 13 — secundarios */
+  --fs-base: 0.9375rem;  /* 15 — cuerpo */
+  --fs-md: 1rem;         /* 16 — inputs (evita zoom iOS) */
+  --fs-lg: 1.125rem;     /* 18 — títulos de card */
+  --fs-xl: 1.375rem;     /* 22 — títulos de sección */
+  --fs-2xl: 1.75rem;     /* 28 — títulos de pantalla */
+  --fs-3xl: 2.125rem;    /* 34 — números grandes */
+  --fs-display: 2.625rem;/* 42 — hero */
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-base: 1.5;
+  --ls-tight: -0.02em;
+  --ls-wide: 0.06em;
+  --ls-wider: 0.1em;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ---------- Espaciado (base 4px) ---------- */
+  --sp-1: 0.25rem;   /* 4  */
+  --sp-2: 0.5rem;    /* 8  */
+  --sp-3: 0.75rem;   /* 12 */
+  --sp-4: 1rem;      /* 16 */
+  --sp-5: 1.25rem;   /* 20 */
+  --sp-6: 1.5rem;    /* 24 */
+  --sp-7: 2rem;      /* 32 */
+  --sp-8: 2.5rem;    /* 40 */
+  --sp-9: 3rem;      /* 48 */
+  --sp-10: 4rem;     /* 64 */
+
+  --gutter: 1rem;    /* padding lateral mobile */
+  --content-max: 46rem;  /* 736px — columna de lectura mobile+tablet */
+  --wide-max: 64rem;     /* 1024px — desktop */
+  --nav-h: 4rem;         /* 64px bottom nav */
+  --rail-w: 15rem;       /* 240px sidebar desktop */
+
+  /* ---------- Radios ---------- */
+  --r-xs: 0.5rem;
+  --r-sm: 0.625rem;
+  --r-md: 0.875rem;
+  --r-lg: 1.125rem;
+  --r-xl: 1.375rem;
+  --r-2xl: 1.75rem;
+  --r-pill: 999px;
+
+  /* ---------- Sombras / elevación ---------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.28);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.36);
+  --shadow-accent: 0 6px 20px color-mix(in srgb, var(--p-accent) 22%, transparent);
+
+  /* ---------- Motion ---------- */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---------- Z-index ---------- */
+  --z-nav: 40;
+  --z-sticky: 30;
+  --z-sheet: 60;
+  --z-toast: 80;
+
+  /* ---------- Touch ---------- */
+  --touch: 2.75rem;         /* 44px mínimo */
+  --touch-comfy: 3rem;      /* 48px objetivo */
+
+  color-scheme: dark;
+}
+
+/* ---------- Tema claro explícito ---------- */
+[data-theme="light"] {
+  --p-bg: #f4f7f5;
+  --p-bg-2: #ffffff;
+  --p-surface: #ffffff;
+  --p-surface-2: #eff4f1;
+  --p-surface-3: #e5ece8;
+  --p-line: #dde5e1;
+  --p-line-strong: #c7d4ce;
+  --p-text: #0d1a17;
+  --p-text-dim: #465753;
+  --p-text-mute: #5a6b66;
+  --p-accent: #0b7f4f;
+  --p-accent-strong: #0a7048;
+  --p-accent-text: #0a7048;
+  --p-accent-ink: #ffffff;
+  --p-protein: #1a63d4;
+  --p-carbs: #a35c07;
+  --p-fat: #6d3bd1;
+  --p-danger: #c62b2b;
+  --p-warn: #8a5a06;
+  --p-glow: rgba(14, 158, 99, 0.14);
+  --p-overlay: rgba(13, 26, 23, 0.42);
+
+  --shadow-1: 0 1px 2px rgba(16, 32, 28, 0.06);
+  --shadow-2: 0 4px 16px rgba(16, 32, 28, 0.08);
+  --shadow-3: 0 12px 32px rgba(16, 32, 28, 0.12);
+
+  color-scheme: light;
+}
+
+/* ---------- Sin elección guardada: seguí al sistema ---------- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --p-bg: #f4f7f5;
+    --p-bg-2: #ffffff;
+    --p-surface: #ffffff;
+    --p-surface-2: #eff4f1;
+    --p-surface-3: #e5ece8;
+    --p-line: #dde5e1;
+    --p-line-strong: #c7d4ce;
+    --p-text: #0d1a17;
+    --p-text-dim: #465753;
+    --p-text-mute: #5a6b66;
+    --p-accent: #0b7f4f;
+    --p-accent-strong: #0a7048;
+    --p-accent-text: #0a7048;
+    --p-accent-ink: #ffffff;
+    --p-protein: #1a63d4;
+    --p-carbs: #a35c07;
+    --p-fat: #6d3bd1;
+    --p-danger: #c62b2b;
+    --p-warn: #8a5a06;
+    --p-glow: rgba(14, 158, 99, 0.14);
+    --p-overlay: rgba(13, 26, 23, 0.42);
+    --shadow-1: 0 1px 2px rgba(16, 32, 28, 0.06);
+    --shadow-2: 0 4px 16px rgba(16, 32, 28, 0.08);
+    --shadow-3: 0 12px 32px rgba(16, 32, 28, 0.12);
+    color-scheme: light;
+  }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{.Title}} · FitOrDie</title>
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0f0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitOrDie">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon-180.png">
+  <link rel="stylesheet" href="/static/css/app.css?v=20261102">
+</head>
+<body data-page="login">
+  <main class="auth">
+    <div class="auth__box">
+      <p class="kicker">FitOrDie</p>
+      <h1 class="auth__title">Entrar</h1>
+
+      {{if .Error}}
+      <p class="auth__error" role="alert">{{.Error}}</p>
+      {{else}}
+      <p class="sub">Tu diario, tu rutina y tu progreso. Solo para vos.</p>
+      {{end}}
+
+      <form class="auth__form" method="post" action="/login">
+        <input type="hidden" name="csrf" value="{{.CSRF}}">
+        <input type="hidden" name="next" value="{{.Next}}">
+
+        <label class="auth__label" for="email">Email</label>
+        <input class="auth__input" id="email" name="email" type="email" value="{{.Email}}"
+               autocomplete="username" inputmode="email" autocapitalize="none"
+               autocorrect="off" spellcheck="false" required>
+
+        <label class="auth__label" for="password">Clave</label>
+        <input class="auth__input" id="password" name="password" type="password"
+               autocomplete="current-password" required>
+
+        <button class="auth__btn" type="submit">Entrar</button>
+      </form>
+
+      <p class="auth__foot">La sesión dura 30 días en este dispositivo.</p>
+    </div>
+  </main>
+</body>
+</html>

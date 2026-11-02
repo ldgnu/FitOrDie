@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FitOrDie">
+  <rect width="512" height="512" rx="112" fill="#5be49b"/>
+  <g fill="#04231a">
+    <rect x="142" y="216" width="56" height="130" rx="18"/>
+    <rect x="228" y="136" width="56" height="210" rx="18"/>
+    <rect x="314" y="178" width="56" height="168" rx="18"/>
+    <circle cx="398" cy="106" r="17"/>
+  </g>
+</svg>
