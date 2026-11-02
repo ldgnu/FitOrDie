@@ -264,6 +264,7 @@ main.auth{
   padding:calc(var(--sp) + env(safe-area-inset-top)) calc(var(--sp) + env(safe-area-inset-right)) calc(var(--sp) + env(safe-area-inset-bottom)) calc(var(--sp) + env(safe-area-inset-left));
 }
 .auth__box{width:100%;max-width:21rem}
+.auth__logo{display:block;width:64px;height:64px;margin:0 0 14px;border-radius:16px}
 .auth__title{font-size:2rem;line-height:1.15;letter-spacing:-.02em;font-weight:600;margin-top:2px}
 .auth__form{margin-top:20px;display:grid;gap:8px}
 .auth__label{

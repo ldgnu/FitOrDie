@@ -1,9 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FitOrDie">
-  <rect width="512" height="512" rx="112" fill="#5be49b"/>
-  <g fill="#04231a">
-    <rect x="142" y="216" width="56" height="130" rx="18"/>
-    <rect x="228" y="136" width="56" height="210" rx="18"/>
-    <rect x="314" y="178" width="56" height="168" rx="18"/>
-    <circle cx="398" cy="106" r="17"/>
-  </g>
+  <rect width="512" height="512" rx="112" fill="#0a0f0e"/>
+  <path d="M256 58 L294 120 L322 164 L340 214 L344 268 L338 320 L322 364 L298 400 L280 420 L268 432 L256 436 L244 432 L232 420 L218 400 L198 362 L184 328 L178 292 L180 258 L188 224 L200 190 L218 156 L236 124 Z" fill="#3ddc97"/>
+  <polyline points="202,272 226,272 240,240 254,304 268,250 282,272 310,272" fill="none" stroke="#0a0f0e" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
