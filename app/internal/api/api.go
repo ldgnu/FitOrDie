@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ldgnu/fitordie/internal/nutrition"
 	"github.com/ldgnu/fitordie/internal/store"
@@ -22,6 +23,9 @@ import (
 
 // maxBody limita el tamaño de los cuerpos JSON aceptados.
 const maxBody = 1 << 20 // 1 MiB
+
+// maxSetNote acota la nota libre de una serie.
+const maxSetNote = 200
 
 // Options configura lo opcional de la API (hoy: el LLM para estimar comidas).
 // Con todo vacío la API funciona igual, solo con el parser local determinista.
@@ -173,6 +177,7 @@ type workoutSetJSON struct {
 	WeightKg     *float64 `json:"weight_kg"`
 	Reps         *int     `json:"reps"`
 	RIR          *int     `json:"rir"`
+	Note         string   `json:"note,omitempty"`
 	VolumeKg     float64  `json:"volume_kg"`
 }
 
@@ -203,6 +208,7 @@ type setJSON struct {
 	WeightKg   *float64 `json:"weight_kg,omitempty"`
 	Reps       *int     `json:"reps,omitempty"`
 	RIR        *int     `json:"rir,omitempty"`
+	Note       string   `json:"note,omitempty"`
 }
 
 type workoutRequest struct {
@@ -565,7 +571,7 @@ func (a *API) getWorkouts(w http.ResponseWriter, r *http.Request) {
 			sets = append(sets, workoutSetJSON{
 				ExerciseID: st.ExerciseID, ExerciseName: st.ExerciseName,
 				SetNumber: st.SetNumber, WeightKg: st.WeightKg, Reps: st.Reps,
-				RIR: st.RIR, VolumeKg: st.VolumeKg,
+				RIR: st.RIR, Note: st.Note, VolumeKg: st.VolumeKg,
 			})
 			agg, ok := byEx[st.ExerciseID]
 			if !ok {
@@ -703,9 +709,14 @@ func (a *API) postWorkout(w http.ResponseWriter, r *http.Request) {
 			a.fail(w, http.StatusBadRequest, fmt.Sprintf("serie %d: RIR fuera de rango (0-10)", i+1))
 			return
 		}
+		note := strings.TrimSpace(s.Note)
+		if utf8.RuneCountInString(note) > maxSetNote {
+			a.fail(w, http.StatusBadRequest, fmt.Sprintf("serie %d: nota demasiado larga (máx %d caracteres)", i+1, maxSetNote))
+			return
+		}
 		sets = append(sets, store.SetInput{
 			ExerciseID: s.ExerciseID, SetNumber: s.SetNumber,
-			WeightKg: s.WeightKg, Reps: s.Reps, RIR: s.RIR,
+			WeightKg: s.WeightKg, Reps: s.Reps, RIR: s.RIR, Note: note,
 		})
 	}
 

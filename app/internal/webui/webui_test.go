@@ -70,17 +70,25 @@ func TestRutinaVideoFallback(t *testing.T) {
 	d := &viewData{
 		Page:  "rutina",
 		Title: "Rutina",
-		RoutineGroups: []routineGroup{{
-			Key:     "A",
-			Name:    routineDayNames["A"],
-			Summary: "2 ejercicios · 6 series",
-			Exercises: []store.Exercise{
-				{ID: 1, Name: "Prensa de piernas", Sets: 3, Reps: "10-12", RIR: "3-4", RestSec: 120,
-					YouTubeQuery: "prensa de piernas técnica correcta"},
-				{ID: 2, Name: "Ejercicio sin video", Sets: 3, Reps: "10-12", RIR: "3-4", RestSec: 90,
-					YouTubeQuery: "ejercicio sin video"},
+		Tabs: []dayTabView{
+			{Key: "A", Name: routineDayNames["A"], Active: true, Planned: 6},
+			{Key: "B", Name: routineDayNames["B"], Planned: 11},
+		},
+		Sheet: &daySheetView{
+			Key: "A", Name: routineDayNames["A"], Summary: "2 ejercicios · 6 series planificadas",
+			Planned: 6,
+			Exercises: []exerciseSheetView{
+				{
+					Exercise: store.Exercise{ID: 1, Name: "Prensa de piernas", Sets: 3, Reps: "10-12", RIR: "3-4", RestSec: 120,
+						YouTubeQuery: "prensa de piernas técnica correcta"},
+					Rows: []setRowView{{ExerciseID: 1, ExerciseName: "Prensa de piernas", SetNumber: 1, Weight: "80", Reps: "10"}},
+				},
+				{
+					Exercise: store.Exercise{ID: 2, Name: "Ejercicio sin video", Sets: 3, Reps: "10-12", RIR: "3-4", RestSec: 90,
+						YouTubeQuery: "ejercicio sin video"},
+				},
 			},
-		}},
+		},
 	}
 
 	var buf bytes.Buffer

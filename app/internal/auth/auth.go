@@ -35,6 +35,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/ldgnu/fitordie/static"
 	"github.com/ldgnu/fitordie/templates"
 )
 
@@ -269,15 +270,19 @@ func (g *Guard) logout(w http.ResponseWriter, r *http.Request) {
 // ---------------------------------------------------------------- login view
 
 type loginView struct {
-	Title string
-	Email string
-	Next  string
-	CSRF  string
-	Error string
+	Title    string
+	Email    string
+	Next     string
+	CSRF     string
+	Error    string
+	AssetVer string
 }
 
 func (g *Guard) render(w http.ResponseWriter, r *http.Request, status int, v loginView) {
 	v.Title = "Entrar"
+	// Misma versión que el panel: si cambia el CSS, el login no queda con el
+	// viejo cacheado en el borde.
+	v.AssetVer = static.Version
 	h := w.Header()
 	h.Set("Content-Type", "text/html; charset=utf-8")
 	h.Set("Cache-Control", "no-store")

@@ -156,6 +156,8 @@ type SetInput struct {
 	WeightKg   *float64
 	Reps       *int
 	RIR        *int
+	// Note es la nota libre de la serie (\"última lenta\", \"fallo técnico\").
+	Note string
 }
 
 // Workout es un entrenamiento registrado.
@@ -197,6 +199,7 @@ type WorkoutSetDetail struct {
 	WeightKg     *float64
 	Reps         *int
 	RIR          *int
+	Note         string
 	VolumeKg     float64 // peso * reps; 0 cuando falta alguno de los dos
 }
 
@@ -279,6 +282,10 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	// Bases creadas antes de la tanda de notas: `weights.note` no existe en el
 	// DDL viejo, así que IF NOT EXISTS no la agrega. Idempotente por diseño.
 	if err := ensureColumn(ctx, db, "weights", "note", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	// Nota por serie (hoja de rutina del día): las bases viejas no la tienen.
+	if err := ensureColumn(ctx, db, "workout_sets", "note", "TEXT NOT NULL DEFAULT ''"); err != nil {
 		return err
 	}
 	return nil
@@ -849,9 +856,9 @@ func (s *Store) SaveWorkout(ctx context.Context, day, routineDay, notes string, 
 	}
 	for _, st := range sets {
 		if _, err := tx.ExecContext(ctx,
-			`INSERT INTO workout_sets (workout_id, exercise_id, set_number, weight_kg, reps, rir, created_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			id, st.ExerciseID, st.SetNumber, st.WeightKg, st.Reps, st.RIR, now); err != nil {
+			`INSERT INTO workout_sets (workout_id, exercise_id, set_number, weight_kg, reps, rir, note, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			id, st.ExerciseID, st.SetNumber, st.WeightKg, st.Reps, st.RIR, st.Note, now); err != nil {
 			return Workout{}, fmt.Errorf("guardar serie %d: %w", st.SetNumber, err)
 		}
 	}
@@ -881,7 +888,7 @@ func (s *Store) WorkoutByDay(ctx context.Context, day string) (Workout, error) {
 	w.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT exercise_id, set_number, weight_kg, reps, rir FROM workout_sets
+		`SELECT exercise_id, set_number, weight_kg, reps, rir, note FROM workout_sets
 		 WHERE workout_id = ? ORDER BY exercise_id, set_number`, w.ID)
 	if err != nil {
 		return Workout{}, fmt.Errorf("leer series: %w", err)
@@ -892,7 +899,7 @@ func (s *Store) WorkoutByDay(ctx context.Context, day string) (Workout, error) {
 		var st SetInput
 		var weight sql.NullFloat64
 		var reps, rir sql.NullInt64
-		if err := rows.Scan(&st.ExerciseID, &st.SetNumber, &weight, &reps, &rir); err != nil {
+		if err := rows.Scan(&st.ExerciseID, &st.SetNumber, &weight, &reps, &rir, &st.Note); err != nil {
 			return Workout{}, err
 		}
 		if weight.Valid {
@@ -936,7 +943,7 @@ func (s *Store) WorkoutsRange(ctx context.Context, from, to string, limit int) (
 	args = append(args, limit)
 
 	q := `SELECT w.id, w.day, w.routine_day, w.notes, w.duration_min,
-	             s.exercise_id, s.set_number, s.weight_kg, s.reps, s.rir,
+	             s.exercise_id, s.set_number, s.weight_kg, s.reps, s.rir, COALESCE(s.note, ''),
 	             COALESCE(e.name, ''), COALESCE(e.ord, 0)
 	      FROM workouts w
 	      LEFT JOIN workout_sets s ON s.workout_id = w.id
@@ -962,11 +969,12 @@ func (s *Store) WorkoutsRange(ctx context.Context, from, to string, limit int) (
 			setNumber       sql.NullInt64
 			weight          sql.NullFloat64
 			reps, rir       sql.NullInt64
+			setNote         string
 			exerciseName    string
 			ord             int64
 		)
 		if err := rows.Scan(&id, &day, &routineDay, &notes, &durationMin,
-			&exerciseID, &setNumber, &weight, &reps, &rir, &exerciseName, &ord); err != nil {
+			&exerciseID, &setNumber, &weight, &reps, &rir, &setNote, &exerciseName, &ord); err != nil {
 			return nil, fmt.Errorf("leer entrenamiento: %w", err)
 		}
 
@@ -987,6 +995,7 @@ func (s *Store) WorkoutsRange(ctx context.Context, from, to string, limit int) (
 			ExerciseID:   exerciseID.Int64,
 			ExerciseName: exerciseName,
 			SetNumber:    int(setNumber.Int64),
+			Note:         setNote,
 		}
 		if weight.Valid {
 			v := weight.Float64

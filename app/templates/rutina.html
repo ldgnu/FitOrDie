@@ -5,153 +5,140 @@
   <p class="sub">RIR 2-4 según el ejercicio; nunca al fallo.</p>
 </header>
 
-{{if .RoutineGroups}}
-<div class="jump" role="group" aria-label="Ir a un día">
-  {{range .RoutineGroups}}<a href="#dia-{{.Key}}">Día {{.Key}}</a>{{end}}
+<div class="chips" role="group" aria-label="Cambiar de día">
+  <a class="chip" href="/rutina?date={{.Prev}}&amp;day={{with .Sheet}}{{.Key}}{{end}}">← {{dmy .Prev}}</a>
+  {{if .IsToday}}
+  <span class="chip" aria-current="true">hoy</span>
+  {{else}}
+  <a class="chip" href="/rutina?day={{with .Sheet}}{{.Key}}{{end}}">hoy</a>
+  {{end}}
+  <a class="chip" href="/rutina?date={{.Next}}&amp;day={{with .Sheet}}{{.Key}}{{end}}">{{dmy .Next}} →</a>
 </div>
+
+{{/* ---------------------------------------------------- pestañas por día */}}
+{{if .Tabs}}
+<nav class="tabs" aria-label="Elegir día de la rutina">
+  {{range .Tabs}}
+  <a class="tab{{if .Active}} is-active{{end}}" href="/rutina?date={{$.Date}}&amp;day={{.Key}}"{{if .Active}} aria-current="page"{{end}}>
+    <span class="tab__k">Día {{.Key}}</span>
+    <span class="tab__n">{{.Name}}</span>
+  </a>
+  {{end}}
+</nav>
 {{end}}
 
-{{/* ---------------------------------------------------- sesión del día */}}
-<section class="card" id="sesion">
-  <div class="card__head">
-    <h2>Sesión del día</h2>
-    <span class="hint">{{dmy .Date}}</span>
-  </div>
+{{with .Sheet}}
+{{if .Key}}
+{{/* ------------------------------------------- la hoja del día (una sola) */}}
+<form class="sheet" method="post" action="/rutina/hoja">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <input type="hidden" name="date" value="{{$.Date}}">
+  <input type="hidden" name="day" value="{{.Key}}">
 
-  {{with .Workout}}
-  {{if .Exists}}
-  <p class="hint" style="margin-top:6px">
-    {{if .RoutineDay}}Día {{.RoutineDay}}{{if .DayName}} · {{.DayName}}{{end}} · {{end}}
-    {{.SetCount}} series · {{num .Volume}} kg de volumen{{if .DurationMin}} · {{.DurationMin}} min{{end}}
-  </p>
-  {{if .Notes}}<p class="note"><span class="lbl">Nota del día</span>{{.Notes}}</p>{{end}}
-  {{else}}
-  <p class="empty">Sin entrenamiento cargado este día.</p>
-  {{end}}
-
-  {{if .Groups}}
-  {{range .Groups}}
-  <div class="sgroup">
-    <div class="sgroup__top">
-      <p class="sgroup__name">{{.ExerciseName}}</p>
-      <span class="hint num">{{num .Volume}} kg</span>
+  <section class="card">
+    <div class="card__head">
+      <h2>Día {{.Key}} · {{.Name}}</h2>
+      <span class="hint">{{dmy $.Date}}</span>
     </div>
-    <ul class="srows">
-      {{range .Sets}}
-      <li>
-        <form class="srow" method="post" action="/rutina/serie">
-          <input type="hidden" name="csrf" value="{{$.CSRF}}">
-          <input type="hidden" name="date" value="{{$.Date}}">
-          <input type="hidden" name="exercise_id" value="{{.ExerciseID}}">
-          <input type="hidden" name="set_number" value="{{.SetNumber}}">
-          <input type="hidden" name="notes" value="{{$.Workout.Notes}}">
-          <input type="hidden" name="duration" value="{{$.Workout.DurationMin}}">
-          <span class="srow__n">#{{.SetNumber}}</span>
-          <input type="number" name="weight" value="{{.Weight}}" min="0" max="1000" step="0.5"
-            inputmode="decimal" aria-label="Peso de la serie {{.SetNumber}} de {{.ExerciseName}}" placeholder="kg">
-          <input type="number" name="reps" value="{{.Reps}}" min="0" max="200" step="1"
-            inputmode="numeric" aria-label="Reps de la serie {{.SetNumber}}" placeholder="reps">
-          <input type="number" name="rir" value="{{.RIR}}" min="0" max="10" step="1"
-            inputmode="numeric" aria-label="RIR de la serie {{.SetNumber}}" placeholder="RIR">
-          <button class="sbtn" type="submit" name="accion" value="guardar">Guardar</button>
-          <button class="sbtn sbtn--x" type="submit" name="accion" value="borrar" formnovalidate
-            title="Borrar serie {{.SetNumber}}" aria-label="Borrar serie {{.SetNumber}} de {{.ExerciseName}}">×</button>
-        </form>
-      </li>
-      {{end}}
-    </ul>
-  </div>
-  {{end}}
-  {{end}}
-  {{end}}
-
-  <h3 class="pgroup">Agregar serie</h3>
-  <form class="form" method="post" action="/rutina/serie">
-    <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <input type="hidden" name="date" value="{{.Date}}">
-    <input type="hidden" name="accion" value="guardar">
-    <div class="field field--grow">
-      <label class="lbl" for="s-ex">Ejercicio</label>
-      <select id="s-ex" name="exercise_id">
-        <option value="">— solo nota del día —</option>
-        {{range .RoutineGroups}}
-        <optgroup label="Día {{.Key}} · {{.Name}}">
-          {{range .Exercises}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
-        </optgroup>
-        {{end}}
-      </select>
-    </div>
-    <div class="field field--narrow">
-      <label class="lbl" for="s-num">Serie</label>
-      <input id="s-num" type="number" name="set_number" min="0" max="30" step="1" inputmode="numeric"
-        value="{{with .SetForm}}{{.SetNumber}}{{end}}" placeholder="auto">
-    </div>
-    <div class="field field--narrow">
-      <label class="lbl" for="s-kg">Peso (kg)</label>
-      <input id="s-kg" type="number" name="weight" min="0" max="1000" step="0.5" inputmode="decimal"
-        value="{{with .SetForm}}{{.Weight}}{{end}}" placeholder="80">
-    </div>
-    <div class="field field--narrow">
-      <label class="lbl" for="s-reps">Reps</label>
-      <input id="s-reps" type="number" name="reps" min="0" max="200" step="1" inputmode="numeric"
-        value="{{with .SetForm}}{{.Reps}}{{end}}" placeholder="10">
-    </div>
-    <div class="field field--narrow">
-      <label class="lbl" for="s-rir">RIR</label>
-      <input id="s-rir" type="number" name="rir" min="0" max="10" step="1" inputmode="numeric"
-        value="{{with .SetForm}}{{.RIR}}{{end}}" placeholder="3">
-    </div>
-    <div class="field field--grow">
-      <label class="lbl" for="s-notes">Nota del día</label>
-      <input id="s-notes" type="text" name="notes" maxlength="500"
-        value="{{with .Workout}}{{.Notes}}{{end}}" placeholder="sensaciones, molestias, PR…">
-    </div>
-    <div class="field field--narrow">
-      <label class="lbl" for="s-dur">Duración (min)</label>
-      <input id="s-dur" type="number" name="duration" min="0" max="600" step="5" inputmode="numeric"
-        value="{{with .Workout}}{{if .DurationMin}}{{.DurationMin}}{{end}}{{end}}" placeholder="55">
-    </div>
-    <div class="field field--action">
-      <button class="btn btn--accent" type="submit">Guardar serie</button>
-    </div>
-  </form>
-  <p class="hint">Serie vacía = siguiente número. Dejá peso y reps en blanco para guardar solo la nota.</p>
-</section>
-
-{{range .RoutineGroups}}
-<section class="card" id="dia-{{.Key}}">
-  <div class="card__head">
-    <h2>Día {{.Key}}</h2>
-    <span class="hint">{{.Summary}}</span>
-  </div>
-  <p class="sub">{{.Name}}</p>
-
-  {{range .Exercises}}
-  <article class="ex">
-    <h3>{{.Name}}</h3>
-    <dl class="specs">
-      <div><dt>Series × reps</dt><dd>{{.Sets}} × {{.Reps}}</dd></div>
-      <div><dt>Descanso</dt><dd>{{rest .RestSec}}</dd></div>
-      <div><dt>RIR</dt><dd>{{.RIR}}</dd></div>
-    </dl>
-    <p class="note"><span class="lbl">Nota técnica</span>{{if .Notes}}{{.Notes}}{{else}}—{{end}}</p>
-    <p class="last">
-      {{with index $.LastByEx .ID}}
-        Último registro: <b>{{.Text}}</b> <span class="hint">({{.Day}})</span>
-      {{else}}
-        <span class="hint">Sin registro esta semana</span>
-      {{end}}
+    <p class="hint" style="margin-top:6px">
+      {{.Summary}} · {{.SetCount}} series cargadas{{if .Volume}} · {{num .Volume}} kg{{end}}{{if .DurationMin}} · {{.DurationMin}} min{{end}}
     </p>
-    {{$name := .Name}}{{with videoID $name}}<button type="button" class="btn btn--accent js-video"
-       data-video="{{.}}" data-title="{{$name}}" aria-haspopup="dialog">Ver video</button>{{else}}<a class="btn" target="_blank" rel="noopener noreferrer"
-       href="https://www.youtube.com/results?search_query={{urlquery .YouTubeQuery}}">Buscar video</a>{{end}}
-  </article>
-  {{end}}
-</section>
+
+    <div class="exgrid">
+      {{range .Exercises}}
+      <article class="ex">
+        <div class="ex__top">
+          <h3>{{.Name}}</h3>
+          <span class="hint num">{{num .Volume}} kg</span>
+        </div>
+        <dl class="specs">
+          <div><dt>Series × reps</dt><dd>{{.Sets}} × {{.Reps}}</dd></div>
+          <div><dt>Descanso</dt><dd>{{rest .RestSec}}</dd></div>
+          <div><dt>RIR</dt><dd>{{.RIR}}</dd></div>
+        </dl>
+        <p class="note"><span class="lbl">Nota técnica</span>{{if .Notes}}{{.Notes}}{{else}}—{{end}}</p>
+        <p class="last">
+          {{with .Last}}
+            Último registro: <b>{{.Text}}</b> <span class="hint">({{.Day}})</span>
+          {{else}}
+            <span class="hint">Sin registro esta semana</span>
+          {{end}}
+        </p>
+
+        <div class="sets" data-ex="{{.ID}}">
+          <div class="setrow setrow--head" aria-hidden="true">
+            <span class="setrow__n">#</span>
+            <span>kg</span><span>reps</span><span>RIR</span><span class="s-note">nota</span><span></span>
+          </div>
+          {{range .Rows}}
+          <div class="setrow">
+            <span class="setrow__n">{{if .SetNumber}}#{{.SetNumber}}{{else}}+{{end}}</span>
+            <input type="hidden" name="ex" value="{{.ExerciseID}}">
+            <input class="s-in s-kg" type="number" name="kg" value="{{.Weight}}" min="0" max="1000" step="0.5"
+              inputmode="decimal" placeholder="kg" aria-label="Peso de la serie de {{.ExerciseName}}">
+            <input class="s-in s-reps" type="number" name="reps" value="{{.Reps}}" min="0" max="200" step="1"
+              inputmode="numeric" placeholder="reps" aria-label="Reps de la serie de {{.ExerciseName}}">
+            <input class="s-in s-rir" type="number" name="rir" value="{{.RIR}}" min="0" max="10" step="1"
+              inputmode="numeric" placeholder="RIR" aria-label="RIR de la serie de {{.ExerciseName}}">
+            <input class="s-in s-note" type="text" name="note" value="{{.Note}}" maxlength="200"
+              placeholder="nota" aria-label="Nota de la serie de {{.ExerciseName}}">
+            <button type="button" class="xbtn js-clear" title="Vaciar esta serie"
+              aria-label="Vaciar la serie de {{.ExerciseName}}">×</button>
+          </div>
+          {{end}}
+        </div>
+
+        <div class="ex__actions">
+          <button type="button" class="btn btn--ghost js-addset" data-ex="{{.ID}}">+ Agregar serie</button>
+          {{$name := .Name}}{{with videoID $name}}<button type="button" class="btn btn--accent js-video"
+             data-video="{{.}}" data-title="{{$name}}" aria-haspopup="dialog">Ver video</button>{{else}}<a class="btn" target="_blank" rel="noopener noreferrer"
+             href="https://www.youtube.com/results?search_query={{urlquery .YouTubeQuery}}">Buscar video</a>{{end}}
+        </div>
+      </article>
+      {{end}}
+    </div>
+
+    <div class="sheetfoot">
+      <div class="field field--grow">
+        <label class="lbl" for="h-notes">Nota del día</label>
+        <input id="h-notes" type="text" name="day_notes" maxlength="500" value="{{.Notes}}"
+          placeholder="sensaciones, molestias, PR…">
+      </div>
+      <div class="field field--narrow">
+        <label class="lbl" for="h-dur">Duración (min)</label>
+        <input id="h-dur" type="number" name="duration" min="0" max="600" step="5" inputmode="numeric"
+          value="{{if .DurationMin}}{{.DurationMin}}{{end}}" placeholder="55">
+      </div>
+      <div class="field field--action">
+        <button class="btn btn--accent" type="submit">Guardar Día {{.Key}}</button>
+      </div>
+    </div>
+    <p class="hint">Borrar una serie = dejar la fila vacía y guardar: la hoja se guarda completa.</p>
+  </section>
+</form>
+
+{{/* Fila modelo para "Agregar serie": el JS la clona dentro de cada ejercicio. */}}
+<template id="setrow-tpl">
+  <div class="setrow">
+    <span class="setrow__n">+</span>
+    <input type="hidden" name="ex" value="">
+    <input class="s-in s-kg" type="number" name="kg" value="" min="0" max="1000" step="0.5"
+      inputmode="decimal" placeholder="kg" aria-label="Peso de la serie nueva">
+    <input class="s-in s-reps" type="number" name="reps" value="" min="0" max="200" step="1"
+      inputmode="numeric" placeholder="reps" aria-label="Reps de la serie nueva">
+    <input class="s-in s-rir" type="number" name="rir" value="" min="0" max="10" step="1"
+      inputmode="numeric" placeholder="RIR" aria-label="RIR de la serie nueva">
+    <input class="s-in s-note" type="text" name="note" value="" maxlength="200"
+      placeholder="nota" aria-label="Nota de la serie nueva">
+    <button type="button" class="xbtn js-clear" title="Vaciar esta serie" aria-label="Vaciar la serie">×</button>
+  </div>
+</template>
 {{else}}
 <section class="card"><p class="empty">La rutina todavía no está sembrada.</p></section>
 {{end}}
+{{end}}
 
+{{/* ---------------------------------------------------- semana en curso */}}
 <section class="card">
   <div class="card__head">
     <h2>Esta semana</h2>
@@ -211,4 +198,5 @@
   </div>
 </dialog>
 <script src="/static/js/video.js?v={{.AssetVer}}" defer></script>
+<script src="/static/js/sheet.js?v={{.AssetVer}}" defer></script>
 {{end}}

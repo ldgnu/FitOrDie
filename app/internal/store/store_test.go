@@ -280,6 +280,13 @@ func TestSeedPesosMarcaPendienteYNoBorra(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer st.Close()
+	// Perfil ya existente: el seed es INSERT OR IGNORE y no debe pisarlo.
+	if _, err := st.DB().ExecContext(ctx, `INSERT INTO profile
+		(id, name, age, height_cm, weight_kg, target_weight_min, target_weight_max,
+		 kcal_min, kcal_max, protein_min, protein_max, carb_target, fat_target, notes, updated_at)
+		VALUES (1, 'Javi', 38, 185, 89.65, 84, 85, 2150, 2400, 155, 170, 220, 90, '', '2026-10-22T00:00:00Z')`); err != nil {
+		t.Fatalf("perfil previo: %v", err)
+	}
 	if err := st.Seed(ctx, false); err != nil {
 		t.Fatalf("seed: %v", err)
 	}

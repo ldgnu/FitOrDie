@@ -16,7 +16,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -82,50 +81,6 @@ type weightFormView struct {
 	Date string
 	Kg   string
 	Note string
-}
-
-// setRowView es una serie existente del día, editable en el lugar.
-type setRowView struct {
-	ExerciseID   int64
-	ExerciseName string
-	SetNumber    int
-	Weight       string
-	Reps         string
-	RIR          string
-}
-
-// setGroupView agrupa las series de un ejercicio.
-type setGroupView struct {
-	ExerciseID   int64
-	ExerciseName string
-	Sets         []setRowView
-	Volume       float64
-}
-
-// workoutEditorView es la sesión del día tal como se edita en Rutina.
-type workoutEditorView struct {
-	Date        string
-	RoutineDay  string
-	DayName     string
-	Notes       string
-	DurationMin int
-	Groups      []setGroupView
-	SetCount    int
-	Volume      float64
-	Exists      bool
-}
-
-// setFormView conserva lo tipeado en el formulario de series.
-type setFormView struct {
-	Date       string
-	RoutineDay string
-	ExerciseID string
-	SetNumber  string
-	Weight     string
-	Reps       string
-	RIR        string
-	Notes      string
-	Duration   string
 }
 
 // ---------------------------------------------------------------- entrada de formularios
@@ -231,12 +186,8 @@ func flash(q url.Values) string {
 		return "Peso guardado."
 	case "peso_borrado":
 		return "Peso borrado."
-	case "serie":
-		return "Serie guardada."
-	case "serie_borrada":
-		return "Serie borrada."
-	case "nota":
-		return "Nota del día guardada."
+	case "hoja":
+		return "Hoja del día guardada."
 	}
 	return ""
 }
@@ -576,232 +527,215 @@ func (s *Server) progresoPesoBorrar(w http.ResponseWriter, r *http.Request) {
 	redirectWith(w, r, "/progreso", map[string]string{"ok": "peso_borrado"})
 }
 
-// ---------------------------------------------------------------- Rutina: series
+// ---------------------------------------------------------------- Rutina: hoja del día
 
-// rutinaSerie agrega, reemplaza o borra una serie del día. La API reemplaza
-// todas las series del entrenamiento, así que siempre se manda la lista
-// completa: se lee la sesión, se aplica el cambio y se guarda entera.
-func (s *Server) rutinaSerie(w http.ResponseWriter, r *http.Request) {
+// maxSheetRows acota las filas que puede mandar una hoja (3 días x 30 series).
+const maxSheetRows = 200
+
+// maxSetNote acota la nota libre de una serie.
+const maxSetNote = 200
+
+// sheetRow es una fila cruda de la hoja, tal como llegó del formulario: se
+// guarda así para poder devolver el formulario con lo tipeado si algo falla.
+type sheetRow struct {
+	exID int64
+	kg   string
+	reps string
+	rir  string
+	note string
+}
+
+// at devuelve vals[i] o "" si el índice no existe (los navegadores mandan
+// siempre un valor por input, pero no confiamos en eso).
+func at(vals []string, i int) string {
+	if i < 0 || i >= len(vals) {
+		return ""
+	}
+	return vals[i]
+}
+
+// parseSheetRows lee las filas paralelas del formulario (ex/kg/reps/rir/note).
+func parseSheetRows(r *http.Request) ([]sheetRow, error) {
+	exVals := r.PostForm["ex"]
+	if len(exVals) > maxSheetRows {
+		return nil, fmt.Errorf("demasiadas filas (máximo %d)", maxSheetRows)
+	}
+	kgVals, repsVals := r.PostForm["kg"], r.PostForm["reps"]
+	rirVals, noteVals := r.PostForm["rir"], r.PostForm["note"]
+
+	rows := make([]sheetRow, 0, len(exVals))
+	for i := range exVals {
+		raw := strings.TrimSpace(exVals[i])
+		if raw == "" {
+			continue
+		}
+		id, err := strconv.ParseInt(raw, 10, 64)
+		if err != nil || id <= 0 {
+			return nil, fmt.Errorf("hay una fila sin un ejercicio válido")
+		}
+		rows = append(rows, sheetRow{
+			exID: id, kg: at(kgVals, i), reps: at(repsVals, i),
+			rir: at(rirVals, i), note: at(noteVals, i),
+		})
+	}
+	return rows, nil
+}
+
+// fillSheetFromRows devuelve a la hoja lo que el usuario tipeó. Se usa cuando
+// una validación falla: perder 12 filas de series por un typo sería peor que
+// el error.
+func fillSheetFromRows(d *viewData, rows []sheetRow) {
+	if d.Sheet == nil {
+		return
+	}
+	byEx := make(map[int64][]sheetRow, len(rows))
+	for _, row := range rows {
+		byEx[row.exID] = append(byEx[row.exID], row)
+	}
+	for i := range d.Sheet.Exercises {
+		ev := &d.Sheet.Exercises[i]
+		ev.Rows = nil
+		for n, row := range byEx[ev.ID] {
+			ev.Rows = append(ev.Rows, setRowView{
+				ExerciseID: ev.ID, ExerciseName: ev.Name, SetNumber: n + 1,
+				Weight: strings.TrimSpace(row.kg), Reps: strings.TrimSpace(row.reps),
+				RIR: strings.TrimSpace(row.rir), Note: strings.TrimSpace(row.note),
+			})
+		}
+		ev.Rows = append(ev.Rows, setRowView{ExerciseID: ev.ID, ExerciseName: ev.Name})
+		ev.HasSets = len(ev.Rows) > 1
+	}
+}
+
+// rutinaHoja guarda la hoja completa de un día: las series de todos los
+// ejercicios del día en una sola pasada, más la nota y la duración.
+//
+// Semántica igual a POST /api/workout: lo que llega es la lista final del día.
+// Agregar, editar y borrar se hace sobre la hoja (borrar = dejar la fila
+// vacía) y se guarda entera, así que la sesión nunca queda con huecos ni
+// series duplicadas.
+func (s *Server) rutinaHoja(w http.ResponseWriter, r *http.Request) {
 	if !s.readForm(w, r) {
 		return
 	}
 	day := s.formDate(r, store.Today(s.loc))
-	d, err := s.rutinaView(r, day)
+	dayKey := field(r, "day", 1)
+	d, err := s.rutinaView(r, day, dayKey)
 	if err != nil {
 		s.fail(w, err)
 		return
 	}
+	if d.Sheet == nil || d.Sheet.Key == "" {
+		s.deny(w, http.StatusBadRequest, "La rutina no está sembrada.")
+		return
+	}
+	if dayKey != "" && dayKey != d.Sheet.Key {
+		d.Err = "Ese día no existe en la rutina."
+		s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+		return
+	}
+	dayKey = d.Sheet.Key
 
-	accion := field(r, "accion", 16)
-	exerciseID := int64(fieldNum(r, "exercise_id"))
-	setNumber := int(fieldNum(r, "set_number"))
-	weightRaw := field(r, "weight", 16)
-	repsRaw := field(r, "reps", 16)
-	rirRaw := field(r, "rir", 16)
-	notes := field(r, "notes", maxNotesLen)
+	// Lo tipeado del pie de la hoja, para poder devolverlo si algo falla.
+	notes := field(r, "day_notes", maxNotesLen)
 	duration := int(fieldNum(r, "duration"))
+	d.Sheet.Notes, d.Sheet.DurationMin = notes, duration
 
-	d.SetForm = &setFormView{
-		Date: day, ExerciseID: strconv.FormatInt(exerciseID, 10),
-		SetNumber: strconv.Itoa(setNumber), Weight: weightRaw, Reps: repsRaw,
-		RIR: rirRaw, Notes: notes, Duration: strconv.Itoa(duration),
-	}
-
-	routine, err := s.st.Routine(r.Context())
+	rows, err := parseSheetRows(r)
 	if err != nil {
-		s.fail(w, err)
+		d.Err = err.Error()
+		s.render(w, r, "rutina.html", d, http.StatusBadRequest)
 		return
 	}
-	byID := make(map[int64]store.Exercise, len(routine))
-	for _, e := range routine {
-		byID[e.ID] = e
-	}
-
-	// Sesión vigente del día (puede no existir todavía).
-	var sets []store.SetInput
-	routineDay := ""
-	if wo, err := s.st.WorkoutByDay(r.Context(), day); err == nil {
-		sets = append(sets, wo.Sets...)
-		routineDay = wo.RoutineDay
-	} else if !errors.Is(err, store.ErrNotFound) {
-		s.fail(w, err)
-		return
-	}
-	if routineDay == "" {
-		routineDay = "A"
-	}
-
-	if accion == "borrar" {
-		ex, ok := byID[exerciseID]
-		if !ok {
-			d.Err = "Elegí un ejercicio válido para borrar la serie."
-			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-			return
-		}
-		if routineDay == "" {
-			routineDay = ex.Day
-		}
-		filtered := sets[:0]
-		removed := false
-		for _, st := range sets {
-			if st.ExerciseID == exerciseID && st.SetNumber == setNumber {
-				removed = true
-				continue
-			}
-			filtered = append(filtered, st)
-		}
-		if !removed {
-			d.Err = "Esa serie ya no existe. Recargá la página."
-			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-			return
-		}
-		sets = filtered
-	} else {
-		// ¿Es solo guardar la nota del día? Sin peso y sin reps no hay serie.
-		_, hasWeight := fieldNumOK(r, "weight")
-		_, hasReps := fieldNumOK(r, "reps")
-		if !hasWeight && !hasReps && exerciseID == 0 {
-			if notes == "" && duration <= 0 {
-				d.Err = "Poné peso y reps para cargar una serie, o una nota para el día."
-				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-				return
-			}
-			if duration < 0 || duration > 600 {
-				d.Err = "La duración tiene que estar entre 0 y 600 minutos."
-				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-				return
-			}
-			if _, err := s.st.SaveWorkout(r.Context(), day, routineDay, notes, duration, sets); err != nil {
-				slog.Error("webui: guardar nota", "err", err)
-				d.Err = "No pude guardar la nota."
-				s.render(w, r, "rutina.html", d, http.StatusInternalServerError)
-				return
-			}
-			redirectWith(w, r, "/rutina", map[string]string{"date": day, "ok": "nota"})
-			return
-		}
-
-		ex, ok := byID[exerciseID]
-		if !ok {
-			d.Err = "Elegí el ejercicio de la serie."
-			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-			return
-		}
-		routineDay = ex.Day
-
-		var weight *float64
-		var repsInt, rirInt *int
-		if hasWeight {
-			wv := fieldNum(r, "weight")
-			if wv < 0 || wv > 1000 {
-				d.Err = "El peso tiene que estar entre 0 y 1000 kg."
-				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-				return
-			}
-			weight = &wv
-		}
-		if hasReps {
-			rv := fieldNum(r, "reps")
-			if rv < 0 || rv > 200 {
-				d.Err = "Las reps tienen que estar entre 0 y 200."
-				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-				return
-			}
-			ri := int(rv)
-			repsInt = &ri
-		}
-		if rirRaw != "" {
-			rv, ok := number(rirRaw)
-			if !ok || rv < 0 || rv > 10 {
-				d.Err = "El RIR tiene que estar entre 0 y 10."
-				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
-				return
-			}
-			ri := int(rv)
-			rirInt = &ri
-		}
-
-		sets = upsertSet(sets, store.SetInput{
-			ExerciseID: ex.ID, SetNumber: setNumber,
-			WeightKg: weight, Reps: repsInt, RIR: rirInt,
-		})
-	}
-
-	sets = normalizeSets(sets)
+	fillSheetFromRows(d, rows)
 
 	if duration < 0 || duration > 600 {
 		d.Err = "La duración tiene que estar entre 0 y 600 minutos."
 		s.render(w, r, "rutina.html", d, http.StatusBadRequest)
 		return
 	}
-	if _, err := s.st.SaveWorkout(r.Context(), day, routineDay, notes, duration, sets); err != nil {
-		slog.Error("webui: guardar serie", "err", err)
-		d.Err = "No pude guardar la serie."
+
+	allowed := make(map[int64]bool, len(d.Sheet.Exercises))
+	for _, e := range d.Sheet.Exercises {
+		allowed[e.ID] = true
+	}
+
+	perEx := make(map[int64][]store.SetInput, len(allowed))
+	for n, row := range rows {
+		if !allowed[row.exID] {
+			d.Err = fmt.Sprintf("La fila %d es de un ejercicio que no pertenece al día %s.", n+1, dayKey)
+			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+			return
+		}
+		kgRaw, repsRaw := strings.TrimSpace(row.kg), strings.TrimSpace(row.reps)
+		rirRaw, note := strings.TrimSpace(row.rir), strings.TrimSpace(row.note)
+		if kgRaw == "" && repsRaw == "" && rirRaw == "" && note == "" {
+			continue // fila vacía: no es una serie
+		}
+
+		var kg *float64
+		if kgRaw != "" {
+			v, ok := number(kgRaw)
+			if !ok || v < 0 || v > 1000 {
+				d.Err = fmt.Sprintf("Fila %d: el peso tiene que estar entre 0 y 1000 kg.", n+1)
+				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+				return
+			}
+			kg = &v
+		}
+		var repsInt *int
+		if repsRaw != "" {
+			v, ok := number(repsRaw)
+			if !ok || v < 0 || v > 200 {
+				d.Err = fmt.Sprintf("Fila %d: las reps tienen que estar entre 0 y 200.", n+1)
+				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+				return
+			}
+			ri := int(v)
+			repsInt = &ri
+		}
+		var rirInt *int
+		if rirRaw != "" {
+			v, ok := number(rirRaw)
+			if !ok || v < 0 || v > 10 {
+				d.Err = fmt.Sprintf("Fila %d: el RIR tiene que estar entre 0 y 10.", n+1)
+				s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+				return
+			}
+			ri := int(v)
+			rirInt = &ri
+		}
+		if utf8.RuneCountInString(note) > maxSetNote {
+			d.Err = fmt.Sprintf("Fila %d: la nota es muy larga (máximo %d caracteres).", n+1, maxSetNote)
+			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+			return
+		}
+		if kg == nil && repsInt == nil {
+			d.Err = fmt.Sprintf("Fila %d: cargá peso o reps (una nota sola no es una serie).", n+1)
+			s.render(w, r, "rutina.html", d, http.StatusBadRequest)
+			return
+		}
+		perEx[row.exID] = append(perEx[row.exID], store.SetInput{
+			ExerciseID: row.exID, WeightKg: kg, Reps: repsInt, RIR: rirInt, Note: note,
+		})
+	}
+
+	// Orden: ejercicios en el orden del plan, series 1..n dentro de cada uno.
+	sets := make([]store.SetInput, 0, len(rows))
+	for _, e := range d.Sheet.Exercises {
+		for n, st := range perEx[e.ID] {
+			st.SetNumber = n + 1
+			sets = append(sets, st)
+		}
+	}
+
+	if _, err := s.st.SaveWorkout(r.Context(), day, dayKey, notes, duration, sets); err != nil {
+		slog.Error("webui: guardar hoja", "err", err, "day", dayKey)
+		d.Err = "No pude guardar la hoja del día."
 		s.render(w, r, "rutina.html", d, http.StatusInternalServerError)
 		return
 	}
-
-	ok := "serie"
-	if accion == "borrar" {
-		ok = "serie_borrada"
-	}
-	redirectWith(w, r, "/rutina", map[string]string{"date": day, "ok": ok})
-}
-
-// upsertSet inserta la serie o reemplaza la que tiene el mismo número dentro
-// del mismo ejercicio. setNumber 0 = siguiente libre.
-func upsertSet(sets []store.SetInput, in store.SetInput) []store.SetInput {
-	next := 1
-	for _, st := range sets {
-		if st.ExerciseID != in.ExerciseID {
-			continue
-		}
-		if in.SetNumber > 0 && st.SetNumber == in.SetNumber {
-			// Reemplazo en el lugar: conserva el orden de la sesión.
-			replaced := in
-			replaced.SetNumber = st.SetNumber
-			out := make([]store.SetInput, 0, len(sets))
-			for _, other := range sets {
-				if other.ExerciseID == st.ExerciseID && other.SetNumber == st.SetNumber {
-					out = append(out, replaced)
-					continue
-				}
-				out = append(out, other)
-			}
-			return out
-		}
-		if st.SetNumber >= next {
-			next = st.SetNumber + 1
-		}
-	}
-	if in.SetNumber <= 0 {
-		in.SetNumber = next
-	}
-	return append(sets, in)
-}
-
-// normalizeSets renumera las series de cada ejercicio 1..n, en orden, y deja
-// la lista ordenada por ejercicio y número. Sin esto, borrar la serie 2 deja
-// huecos (1 y 3) y la sesión se vuelve ilegible.
-func normalizeSets(sets []store.SetInput) []store.SetInput {
-	byEx := make(map[int64][]store.SetInput, len(sets))
-	order := make([]int64, 0, len(sets))
-	for _, st := range sets {
-		if _, seen := byEx[st.ExerciseID]; !seen {
-			order = append(order, st.ExerciseID)
-		}
-		byEx[st.ExerciseID] = append(byEx[st.ExerciseID], st)
-	}
-	out := make([]store.SetInput, 0, len(sets))
-	for _, id := range order {
-		list := byEx[id]
-		sort.SliceStable(list, func(i, j int) bool { return list[i].SetNumber < list[j].SetNumber })
-		for i := range list {
-			list[i].SetNumber = i + 1
-			out = append(out, list[i])
-		}
-	}
-	return out
+	redirectWith(w, r, "/rutina", map[string]string{"date": day, "day": dayKey, "ok": "hoja"})
 }
 
 // ---------------------------------------------------------------- helpers

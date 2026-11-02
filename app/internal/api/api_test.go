@@ -247,7 +247,7 @@ func TestGetWorkoutsConVolumen(t *testing.T) {
 	code, body := do(t, srv, http.MethodPost, "/api/workout", map[string]any{
 		"date": "2026-10-21", "routine_day": "A", "duration_min": 45, "notes": "sesión test",
 		"sets": []map[string]any{
-			{"exercise_id": exIDs[0], "set_number": 1, "weight_kg": 100, "reps": 10, "rir": 3},
+			{"exercise_id": exIDs[0], "set_number": 1, "weight_kg": 100, "reps": 10, "rir": 3, "note": "última lenta"},
 			{"exercise_id": exIDs[0], "set_number": 2, "weight_kg": 100, "reps": 8, "rir": 2},
 			{"exercise_id": exIDs[1], "set_number": 1, "weight_kg": 40, "reps": 12, "rir": 2},
 		},
@@ -278,6 +278,9 @@ func TestGetWorkoutsConVolumen(t *testing.T) {
 	}
 	if num(first["volume_kg"]) != 1000 {
 		t.Fatalf("volumen de la serie: esperaba 1000, obtuve %v", first["volume_kg"])
+	}
+	if first["note"] != "última lenta" {
+		t.Fatalf("la nota de la serie no volvió: %v", first["note"])
 	}
 	// 100*10 + 100*8 + 40*12 = 2280
 	if num(wo["volume_kg"]) != 2280 {

@@ -404,25 +404,82 @@ main.auth{
 }
 .xbtn:hover,.xbtn:focus-visible{color:var(--danger);border-color:var(--danger);outline:none}
 
-/* --- editor de series del día --- */
-.sgroup{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
-.sgroup:first-of-type{margin-top:10px;padding-top:0;border-top:0}
-.sgroup__top{display:flex;align-items:baseline;gap:8px}
-.sgroup__name{font-weight:600;font-size:.9375rem;min-width:0;overflow-wrap:anywhere}
-.sgroup__top .hint{margin-left:auto;white-space:nowrap}
-.srows{display:grid;gap:6px;margin-top:8px}
-.srow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.srow__n{
-  min-width:1.75rem;color:var(--mute);font-size:.75rem;font-weight:600;
-  font-variant-numeric:tabular-nums;
+/* --- hoja de rutina: pestañas, ejercicios y filas de serie --- */
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{
+  flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;
+  min-height:54px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface);color:var(--dim);
 }
-.srow input{
-  flex:1 1 4.5rem;width:auto;min-width:0;min-height:40px;padding:6px 8px;border-radius:10px;
+.tab__k{font-weight:600;font-size:.9375rem;white-space:nowrap}
+.tab__n{
+  font-size:.75rem;color:var(--mute);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.tab.is-active{
+  border-color:var(--accent);color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 10%,var(--surface));
+}
+.tab.is-active .tab__n{color:var(--accent);opacity:.85}
+
+.sheet .card{margin-bottom:0}
+.exgrid{display:grid;gap:12px;margin-top:12px}
+.sheet .ex{
+  padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);
+}
+.sheet .ex:first-of-type{border-top:1px solid var(--line);padding-top:12px}
+.ex__top{display:flex;align-items:baseline;gap:8px}
+.ex__top h3{flex:1;min-width:0;overflow-wrap:anywhere}
+.ex__top .hint{margin-left:auto;white-space:nowrap}
+
+.sets{display:grid;gap:6px;margin-top:10px}
+.setrow{
+  display:grid;align-items:center;gap:6px;
+  grid-template-columns:1.5rem repeat(3,minmax(0,1fr)) 2.25rem;
+  grid-template-areas:
+    "n kg reps rir x"
+    "note note note note note";
+  padding:6px;border-radius:10px;background:var(--surface);
+}
+.setrow--head{display:none}
+.setrow__n{
+  grid-area:n;color:var(--mute);font-size:.75rem;font-weight:600;
+  font-variant-numeric:tabular-nums;text-align:center;
+}
+.setrow .s-kg{grid-area:kg}
+.setrow .s-reps{grid-area:reps}
+.setrow .s-rir{grid-area:rir}
+.setrow .s-note{grid-area:note}
+.setrow .js-clear{grid-area:x;justify-self:end;width:36px;height:36px}
+.s-in{
+  width:100%;min-width:0;min-height:44px;padding:8px;border-radius:9px;
   background:var(--surface2);border:1px solid var(--line);color:var(--text);
-  font:600 16px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font:600 16px/1.1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
 }
-.srow input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.s-in::placeholder{color:var(--mute);font-weight:500}
+.s-in:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.s-note{font-weight:500}
+.setrow.is-empty{background:transparent;border:1px dashed var(--line)}
+
+.ex__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ex__actions .btn{margin-top:0;width:auto;flex:1 1 9rem;min-height:44px}
+.btn--ghost{
+  border-color:color-mix(in srgb,var(--accent) 55%,transparent);
+  background:transparent;color:var(--accent);
+}
+
+.sheetfoot{
+  display:grid;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);
+}
+.sheetfoot input[type=text],.sheetfoot input[type=number]{
+  width:100%;min-width:0;min-height:46px;padding:10px 12px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  font:400 17px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  -webkit-appearance:none;appearance:none;
+}
+.sheetfoot input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+
 
 /* ========================================================== escritorio */
 /* Desde 900px la app deja de verse como un iPhone: grilla de dos columnas,
@@ -477,5 +534,32 @@ main.auth{
   .pitem__x{grid-column:3/4;justify-self:end}
   .food__form{flex-wrap:nowrap}
   .food__name{flex:1 1 auto}
-  .srow input{flex:0 1 6rem}
+
+  /* Rutina: la hoja ocupa todo el ancho y los ejercicios van en dos columnas;
+     el resumen de la semana y las reglas quedan abajo, lado a lado. */
+  main > .sheet{grid-column:1/-1}
+  main > .tabs{grid-column:1/-1;max-width:52rem}
+  .exgrid{grid-template-columns:1fr 1fr;gap:14px}
+  .tab{min-height:58px;padding:10px 16px}
+  .tab__k{font-size:1rem}
+
+  /* Fila de serie en una sola línea: # kg reps RIR nota × */
+  .setrow{
+    grid-template-columns:2rem 5.5rem 5.5rem 4.5rem minmax(0,1fr) 2.5rem;
+    grid-template-areas:"n kg reps rir note x";
+    padding:4px 6px;background:transparent;
+  }
+  .setrow--head{
+    display:grid;background:transparent;padding:0 6px 2px;
+    font-size:.6875rem;color:var(--mute);text-transform:lowercase;
+  }
+  .setrow--head > span{padding-left:8px}
+  .setrow--head .setrow__n{text-align:center;padding-left:0}
+  .setrow.is-empty{border-style:dashed}
+  .ex__actions .btn{flex:0 0 auto;padding:0 18px}
+  .sheetfoot{
+    grid-template-columns:minmax(0,1fr) 9rem auto;
+    align-items:end;gap:12px;
+  }
+  .sheetfoot .btn{width:auto;padding:0 24px}
 }

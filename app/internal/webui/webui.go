@@ -11,8 +11,6 @@
 package webui
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
@@ -64,19 +62,10 @@ var routineVideoIDs = map[string]string{
 	"Remo en polea baja sentado":       "ZGqDOyGyX20",
 }
 
-// assetVer es un hash corto de los assets embebidos (CSS + JS). Va como ?v=
-// en las URLs para que un deploy nuevo no quede tapado por la caché de
-// Cloudflare, que guarda .css/.js en el borde bastante más que el origin.
-// Se calcula una sola vez al arrancar: si cambia el archivo, cambia la URL.
-var assetVer = func() string {
-	h := sha256.New()
-	for _, name := range []string{"css/app.css", "js/video.js"} {
-		if b, err := static.FS.ReadFile(name); err == nil {
-			h.Write(b)
-		}
-	}
-	return hex.EncodeToString(h.Sum(nil))[:10]
-}()
+// assetVer es el hash corto de los assets embebidos (CSS + JS), calculado en
+// el paquete static. Va como ?v= en las URLs de los assets para que un deploy
+// nuevo no quede tapado por la caché de Cloudflare.
+var assetVer = static.Version
 
 // routineVideoID devuelve el ID de YouTube del ejercicio, o "" si todavía no
 // hay video curado para ese nombre.
@@ -178,8 +167,8 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /progreso/peso", s.progresoPeso)
 	mux.HandleFunc("POST /progreso/peso/borrar", s.progresoPesoBorrar)
 
-	// Rutina: series y nota del día.
-	mux.HandleFunc("POST /rutina/serie", s.rutinaSerie)
+	// Rutina: series y nota del día (una hoja por día, se guarda completa).
+	mux.HandleFunc("POST /rutina/hoja", s.rutinaHoja)
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(static.FS)))
 	mux.HandleFunc("GET /manifest.webmanifest", func(w http.ResponseWriter, r *http.Request) {
@@ -203,12 +192,51 @@ type mealView struct {
 	Totals  nutrition.Macros
 }
 
-type routineGroup struct {
-	Key       string
-	Name      string
-	Summary   string
-	Exercises []store.Exercise
-	Sets      int
+// dayTabView es una pestaña de la rutina: un día del mesociclo.
+type dayTabView struct {
+	Key    string
+	Name   string
+	Active bool
+	// Planned son las series planificadas del día (del plan, no del registro).
+	Planned int
+	// Sets son las series efectivamente cargadas ese día.
+	Sets int
+}
+
+// setRowView es una serie editable dentro de la hoja del día. SetNumber 0 es
+// la fila vacía que espera la próxima serie.
+type setRowView struct {
+	ExerciseID   int64
+	ExerciseName string
+	SetNumber    int
+	Weight       string
+	Reps         string
+	RIR          string
+	Note         string
+}
+
+// exerciseSheetView es un ejercicio del plan con sus series del día.
+type exerciseSheetView struct {
+	store.Exercise
+	Rows    []setRowView
+	Last    *lastSetView
+	Volume  float64
+	HasSets bool
+}
+
+// daySheetView es la hoja del día elegido: todos los ejercicios del plan con
+// los inputs de sus series, más la nota y la duración de la sesión.
+type daySheetView struct {
+	Key         string
+	Name        string
+	Summary     string
+	Planned     int
+	Exercises   []exerciseSheetView
+	SetCount    int
+	Volume      float64
+	Notes       string
+	DurationMin int
+	Exists      bool
 }
 
 // lastSetView es la última serie registrada de un ejercicio en la semana:
@@ -346,17 +374,18 @@ type viewData struct {
 	Streak      int
 	LoggedCount int
 
-	// Rutina.
-	RoutineGroups []routineGroup
-	RoutineNotes  []string
-	LastByEx      map[int64]*lastSetView
-	WeekLabel     string
-	History       []historyWorkout
-	HasHistory    bool
-	WeekSessions  int
-	WeekSets      int
-	WeekReps      int
-	WeekVolume    float64
+	// Rutina: pestañas por día y la hoja del día elegido.
+	Tabs         []dayTabView
+	Sheet        *daySheetView
+	RoutineNotes []string
+	LastByEx     map[int64]*lastSetView
+	WeekLabel    string
+	History      []historyWorkout
+	HasHistory   bool
+	WeekSessions int
+	WeekSets     int
+	WeekReps     int
+	WeekVolume   float64
 
 	// Pesos y reps (Progreso): historial por día y mejor serie por semana.
 	ProgressDays      []progressDay
@@ -371,8 +400,6 @@ type viewData struct {
 	Manual     *manualFormView
 	Preview    *previewView
 	WeightForm *weightFormView
-	SetForm    *setFormView
-	Workout    *workoutEditorView
 	Foods      []store.Food
 	Query      string
 }
@@ -514,40 +541,45 @@ func (s *Server) hoyView(r *http.Request, date string) (*viewData, error) {
 	return d, nil
 }
 
-// rutinaView arma la vista de rutina (plan, semana y editor del día).
-func (s *Server) rutinaView(r *http.Request, date string) (*viewData, error) {
+// rutinaView arma la vista de rutina: pestañas por día, la hoja del día
+// elegido, la semana en curso y las reglas del plan.
+func (s *Server) rutinaView(r *http.Request, date, day string) (*viewData, error) {
 	d, err := s.base(r, date)
 	if err != nil {
 		return nil, err
 	}
 	d.Page, d.Title = "rutina", "Rutina"
-	if err := s.fillRutina(r, d); err != nil {
+	if err := s.fillRutina(r, d, day); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-// fillRutina completa la vista de rutina: plan, reglas, semana en curso y la
-// sesión del día que se edita. Lo usan el GET y los POST de series.
-func (s *Server) fillRutina(r *http.Request, d *viewData) error {
+// fillRutina completa la vista de rutina: pestañas, hoja del día (ejercicios
+// del plan + series cargadas), semana en curso y reglas.
+//
+// El día activo se resuelve así: el pedido explícito (?day= o el POST), si no
+// el del entrenamiento ya cargado para esa fecha y, si no hay nada, el que
+// toca por día de la semana (lun A, mar B, mié C, jue A…).
+func (s *Server) fillRutina(r *http.Request, d *viewData, day string) error {
 	ex, err := s.st.Routine(r.Context())
 	if err != nil {
 		return err
 	}
-	d.RoutineGroups = nil
-	for _, key := range []string{"A", "B", "C"} {
-		g := routineGroup{Key: key, Name: routineDayNames[key]}
-		for _, e := range ex {
-			if e.Day == key {
-				g.Exercises = append(g.Exercises, e)
-				g.Sets += e.Sets
-			}
-		}
-		if len(g.Exercises) > 0 {
-			g.Summary = fmt.Sprintf("%d ejercicios · %d series", len(g.Exercises), g.Sets)
-			d.RoutineGroups = append(d.RoutineGroups, g)
-		}
+	byDay := make(map[string][]store.Exercise, 3)
+	planned := make(map[string]int, 3)
+	for _, e := range ex {
+		byDay[e.Day] = append(byDay[e.Day], e)
+		planned[e.Day] += e.Sets
 	}
+
+	active := s.resolveRoutineDay(r, d, day, byDay)
+	if active == "" {
+		// Rutina sin sembrar: la vista muestra el empty state.
+		d.Sheet = &daySheetView{}
+		return nil
+	}
+
 	notes, err := s.st.PlanNotes(r.Context())
 	if err != nil {
 		return err
@@ -564,7 +596,6 @@ func (s *Server) fillRutina(r *http.Request, d *viewData) error {
 	}
 	d.History = buildHistory(rows)
 	d.HasHistory = len(d.History) > 0
-	d.WeekSessions, d.WeekSets, d.WeekReps, d.WeekVolume = 0, 0, 0, 0
 	for _, h := range d.History {
 		d.WeekSessions++
 		d.WeekSets += h.SetCount
@@ -572,54 +603,104 @@ func (s *Server) fillRutina(r *http.Request, d *viewData) error {
 		d.WeekVolume += h.Volume
 	}
 	d.WeekVolume = round1f(d.WeekVolume)
-	d.LastByEx = lastSets(rows)
 
-	// Editor de la sesión del día elegido.
-	ed := &workoutEditorView{Date: d.Date}
-	if wo, err := s.st.WorkoutByDay(r.Context(), d.Date); err == nil {
-		ed.Exists = true
-		ed.RoutineDay = wo.RoutineDay
-		ed.DayName = routineDayNames[wo.RoutineDay]
-		ed.Notes = wo.Notes
-		ed.DurationMin = wo.DurationMin
-
-		names := make(map[int64]string, len(ex))
-		ord := make(map[int64]int, len(ex))
-		for _, e := range ex {
-			names[e.ID] = e.Name
-			ord[e.ID] = e.Ord
-		}
-		byEx := make(map[int64]*setGroupView, len(wo.Sets))
-		order := make([]int64, 0, len(wo.Sets))
-		for _, st := range wo.Sets {
-			g, ok := byEx[st.ExerciseID]
-			if !ok {
-				g = &setGroupView{ExerciseID: st.ExerciseID, ExerciseName: names[st.ExerciseID]}
-				byEx[st.ExerciseID] = g
-				order = append(order, st.ExerciseID)
-			}
-			g.Sets = append(g.Sets, setRowView{
-				ExerciseID: st.ExerciseID, ExerciseName: names[st.ExerciseID],
-				SetNumber: st.SetNumber,
-				Weight:    inputNumPtr(st.WeightKg),
-				Reps:      inputIntPtr(st.Reps),
-				RIR:       inputIntPtr(st.RIR),
-			})
-			if st.WeightKg != nil && st.Reps != nil {
-				g.Volume = round1f(g.Volume + *st.WeightKg*float64(*st.Reps))
-			}
-			ed.SetCount++
-		}
-		sort.SliceStable(order, func(i, j int) bool { return ord[order[i]] < ord[order[j]] })
-		for _, id := range order {
-			ed.Groups = append(ed.Groups, *byEx[id])
-			ed.Volume = round1f(ed.Volume + byEx[id].Volume)
-		}
-	} else if !errors.Is(err, store.ErrNotFound) {
+	// "Último registro" de cada ejercicio: la mejor serie de la última vez que
+	// se hizo ANTES (o el mismo día) de la fecha que se está editando. Una
+	// ventana de 8 semanas alcanza para no mostrar un recuerdo de hace meses.
+	lastFrom := d.Date
+	if t, err := time.Parse("2006-01-02", d.Date); err == nil {
+		lastFrom = t.AddDate(0, 0, -56).Format("2006-01-02")
+	}
+	lastRows, err := s.st.WorkoutsRange(r.Context(), lastFrom, d.Date, 200)
+	if err != nil {
 		return err
 	}
-	d.Workout = ed
+	d.LastByEx = lastSets(lastRows)
+
+	// Series del día elegido, agrupadas por ejercicio.
+	wo, err := s.st.WorkoutByDay(r.Context(), d.Date)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		return err
+	}
+	setsByEx := make(map[int64][]store.SetInput, len(wo.Sets))
+	for _, st := range wo.Sets {
+		setsByEx[st.ExerciseID] = append(setsByEx[st.ExerciseID], st)
+	}
+
+	sheet := &daySheetView{
+		Key: active, Name: routineDayNames[active],
+		Notes: wo.Notes, DurationMin: wo.DurationMin,
+		Exists: err == nil, Planned: planned[active],
+	}
+	for _, e := range byDay[active] {
+		ev := exerciseSheetView{Exercise: e, Last: d.LastByEx[e.ID]}
+		for _, st := range setsByEx[e.ID] {
+			ev.Rows = append(ev.Rows, setRowView{
+				ExerciseID: e.ID, ExerciseName: e.Name, SetNumber: st.SetNumber,
+				Weight: inputNumPtr(st.WeightKg), Reps: inputIntPtr(st.Reps),
+				RIR: inputIntPtr(st.RIR), Note: st.Note,
+			})
+			if st.WeightKg != nil && st.Reps != nil {
+				ev.Volume = round1f(ev.Volume + *st.WeightKg*float64(*st.Reps))
+			}
+			sheet.SetCount++
+		}
+		ev.HasSets = len(ev.Rows) > 0
+		// Fila vacía para agregar una serie: con JS se clona, sin JS alcanza
+		// para cargar una serie más y guardar.
+		ev.Rows = append(ev.Rows, setRowView{ExerciseID: e.ID, ExerciseName: e.Name})
+		sheet.Volume = round1f(sheet.Volume + ev.Volume)
+		sheet.Exercises = append(sheet.Exercises, ev)
+	}
+	sheet.Summary = fmt.Sprintf("%d ejercicios · %d series planificadas", len(sheet.Exercises), sheet.Planned)
+	d.Sheet = sheet
+
+	// Pestañas: solo los días que existen en el plan.
+	for _, key := range []string{"A", "B", "C"} {
+		if len(byDay[key]) == 0 {
+			continue
+		}
+		t := dayTabView{Key: key, Name: routineDayNames[key], Planned: planned[key], Active: key == active}
+		if key == active {
+			t.Sets = sheet.SetCount
+		}
+		d.Tabs = append(d.Tabs, t)
+	}
 	return nil
+}
+
+// resolveRoutineDay decide qué día mostrar. Prioridad: lo pedido explícito,
+// lo ya cargado para esa fecha, el día de la semana y, al final, el primero
+// que exista en el plan.
+func (s *Server) resolveRoutineDay(r *http.Request, d *viewData, day string, byDay map[string][]store.Exercise) string {
+	valid := func(k string) bool {
+		return (k == "A" || k == "B" || k == "C") && len(byDay[k]) > 0
+	}
+	if valid(day) {
+		return day
+	}
+	if q := strings.TrimSpace(r.URL.Query().Get("day")); valid(q) {
+		return q
+	}
+	if wo, err := s.st.WorkoutByDay(r.Context(), d.Date); err == nil && valid(wo.RoutineDay) {
+		return wo.RoutineDay
+	}
+	// Rotación A/B/C por día de la semana (lunes = A).
+	if t, err := time.ParseInLocation("2006-01-02", d.Date, s.loc); err == nil {
+		wd := int(t.Weekday())
+		if wd == 0 {
+			wd = 7
+		}
+		if k := string(rune('A' + (wd-1)%3)); valid(k) {
+			return k
+		}
+	}
+	for _, k := range []string{"A", "B", "C"} {
+		if valid(k) {
+			return k
+		}
+	}
+	return ""
 }
 
 // progresoView arma la vista de progreso (peso, tendencia y series).
@@ -675,7 +756,7 @@ func (s *Server) hoy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) rutina(w http.ResponseWriter, r *http.Request) {
-	d, err := s.rutinaView(r, "")
+	d, err := s.rutinaView(r, "", "")
 	if err != nil {
 		s.fail(w, err)
 		return
@@ -905,7 +986,8 @@ func lastSets(rows []store.WorkoutDetail) map[int64]*lastSetView {
 		}
 		for _, id := range order {
 			st := best[id]
-			text := fmtSet(st.WeightKg, st.Reps)
+			// fmtSetLoad: un peso 0 es "12 reps", no "0 kg × 12" (serie sin carga).
+			text := fmtSetLoad(st.WeightKg, st.Reps)
 			if text == "" {
 				continue
 			}
@@ -1298,19 +1380,6 @@ func restLabel(sec int) string {
 	default:
 		return strconv.Itoa(sec/60) + " min " + strconv.Itoa(sec%60) + " s"
 	}
-}
-
-// fmtSet escribe una serie como "80 kg × 10".
-func fmtSet(weight *float64, reps *int) string {
-	switch {
-	case weight != nil && reps != nil:
-		return fmtKg(*weight) + " kg × " + strconv.Itoa(*reps)
-	case weight != nil:
-		return fmtKg(*weight) + " kg"
-	case reps != nil:
-		return strconv.Itoa(*reps) + " reps"
-	}
-	return ""
 }
 
 // fmtSetLoad escribe una serie del historial de entrenamientos. Un peso 0 no

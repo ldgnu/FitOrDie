@@ -103,7 +103,7 @@ func TestPaginasTraenFormulariosYCSRF(t *testing.T) {
 		// La previsualización (/hoy/confirmar) y los resultados de búsqueda
 		// (/hoy/alimento) son condicionales: se prueban en sus propios tests.
 		{"/", []string{`action="/hoy/analizar"`, `action="/hoy/manual"`}},
-		{"/rutina", []string{`action="/rutina/serie"`, `id="sesion"`}},
+		{"/rutina", []string{`action="/rutina/hoja"`, `class="tabs"`, `name="day"`}},
 		{"/progreso", []string{`action="/progreso/peso"`, `action="/progreso/peso/borrar"`}},
 	}
 	for _, c := range cases {
@@ -340,8 +340,11 @@ func TestPesoGuardaYBorra(t *testing.T) {
 	}
 }
 
-// TestSerieAgregaEditaYBorra recorre el editor de series contra el store.
-func TestSerieAgregaEditaYBorra(t *testing.T) {
+// TestHojaGuardaSeriesCompletas recorre la hoja del día: todas las series de
+// todos los ejercicios en un solo POST, con la semántica de POST /api/workout
+// (lo que llega es la lista final del día: agregar, editar y borrar se hacen
+// sobre la hoja y se guarda entera).
+func TestHojaGuardaSeriesCompletas(t *testing.T) {
 	_, st, ts := newWeb(t)
 	ctx := context.Background()
 	today := store.Today(time.FixedZone("ART", -3*60*60))
@@ -350,153 +353,189 @@ func TestSerieAgregaEditaYBorra(t *testing.T) {
 	if err != nil || len(routine) == 0 {
 		t.Fatalf("rutina: %v", err)
 	}
-	ex := routine[0]
+	var dayA, dayB []store.Exercise
+	for _, e := range routine {
+		switch e.Day {
+		case "A":
+			dayA = append(dayA, e)
+		case "B":
+			dayB = append(dayB, e)
+		}
+	}
+	if len(dayA) < 2 || len(dayB) == 0 {
+		t.Fatalf("rutina incompleta: A=%d B=%d", len(dayA), len(dayB))
+	}
+	ex1, ex2 := dayA[0], dayA[1]
 
-	add := url.Values{
-		"csrf": {testCSRF}, "date": {today}, "accion": {"guardar"},
-		"exercise_id": {itoa(ex.ID)}, "set_number": {"1"},
-		"weight": {"80"}, "reps": {"10"}, "rir": {"2"},
-		"notes": {"buena sesión"}, "duration": {"55"},
+	// GET de la hoja: trae el formulario completo del día A y no mezcla el B.
+	code, body := get(t, ts, "/rutina?day=A")
+	if code != http.StatusOK {
+		t.Fatalf("GET /rutina?day=A = %d", code)
 	}
-	if code, body := post(t, ts, "/rutina/serie", add); code != http.StatusSeeOther {
-		t.Fatalf("agregar serie = %d (%s)", code, body)
+	for _, want := range []string{
+		`action="/rutina/hoja"`, `name="day" value="A"`, `class="tabs"`,
+		`name="ex" value="` + itoa(ex1.ID) + `"`, ex1.Name, "Día C",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("la hoja del día A no trae %q", want)
+		}
 	}
+	if strings.Contains(body, dayB[0].Name) {
+		t.Errorf("la hoja del día A no debe listar el ejercicio %q del día B", dayB[0].Name)
+	}
+	if !strings.Contains(body, `href="/rutina?date=` + today + `&amp;day=B"`) {
+		t.Errorf("faltan las pestañas que cambian de día")
+	}
+
+	// Hoja completa: dos series de ex1 (una con coma decimal y nota) y una de
+	// ex2 sin peso, más una fila vacía que no debe guardarse.
+	sheet := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"day_notes": {"buena sesión"}, "duration": {"55"},
+		"ex":   {itoa(ex1.ID), itoa(ex1.ID), itoa(ex1.ID), itoa(ex2.ID)},
+		"kg":   {"80", "82,5", "", ""},
+		"reps": {"10", "8", "", "12"},
+		"rir":  {"2", "3", "", ""},
+		"note": {"última lenta", "", "", ""},
+	}
+	if code, body := post(t, ts, "/rutina/hoja", sheet); code != http.StatusSeeOther {
+		t.Fatalf("guardar hoja = %d (%s)", code, body)
+	}
+
 	wo, err := st.WorkoutByDay(ctx, today)
 	if err != nil {
 		t.Fatalf("workout: %v", err)
 	}
-	if len(wo.Sets) != 1 || wo.Notes != "buena sesión" || wo.DurationMin != 55 {
-		t.Fatalf("serie mal guardada: %+v", wo)
+	if wo.RoutineDay != "A" || wo.Notes != "buena sesión" || wo.DurationMin != 55 {
+		t.Fatalf("cabecera del día mal guardada: %+v", wo)
 	}
-	if wo.RoutineDay != ex.Day {
-		t.Errorf("routine_day = %q, esperaba %q", wo.RoutineDay, ex.Day)
+	if len(wo.Sets) != 3 {
+		t.Fatalf("esperaba 3 series, hay %d: %+v", len(wo.Sets), wo.Sets)
 	}
-
-	// Sin número de serie toma el siguiente libre.
-	add.Set("set_number", "")
-	add.Set("weight", "82,5")
-	add.Set("reps", "8")
-	if code, _ := post(t, ts, "/rutina/serie", add); code != http.StatusSeeOther {
-		t.Fatalf("agregar segunda serie = %d", code)
+	if wo.Sets[0].ExerciseID != ex1.ID || wo.Sets[0].SetNumber != 1 ||
+		wo.Sets[0].WeightKg == nil || *wo.Sets[0].WeightKg != 80 ||
+		wo.Sets[0].Reps == nil || *wo.Sets[0].Reps != 10 ||
+		wo.Sets[0].RIR == nil || *wo.Sets[0].RIR != 2 ||
+		wo.Sets[0].Note != "última lenta" {
+		t.Errorf("primera serie mal guardada: %+v", wo.Sets[0])
 	}
-	wo, _ = st.WorkoutByDay(ctx, today)
-	if len(wo.Sets) != 2 {
-		t.Fatalf("esperaba 2 series, hay %d", len(wo.Sets))
+	if wo.Sets[1].SetNumber != 2 || wo.Sets[1].WeightKg == nil || *wo.Sets[1].WeightKg != 82.5 {
+		t.Errorf("la coma decimal no llegó a la serie 2: %+v", wo.Sets[1])
 	}
-	nums := []int{wo.Sets[0].SetNumber, wo.Sets[1].SetNumber}
-	if nums[0] != 1 || nums[1] != 2 {
-		t.Errorf("numeración = %v, esperaba [1 2]", nums)
-	}
-	if wo.Sets[1].WeightKg == nil || *wo.Sets[1].WeightKg != 82.5 {
-		t.Errorf("la segunda serie no tomó la coma decimal: %+v", wo.Sets[1])
+	if wo.Sets[2].ExerciseID != ex2.ID || wo.Sets[2].SetNumber != 1 ||
+		wo.Sets[2].WeightKg != nil || wo.Sets[2].Reps == nil || *wo.Sets[2].Reps != 12 {
+		t.Errorf("serie sin peso mal guardada: %+v", wo.Sets[2])
 	}
 
-	// Editar la serie 1.
-	edit := url.Values{
-		"csrf": {testCSRF}, "date": {today}, "accion": {"guardar"},
-		"exercise_id": {itoa(ex.ID)}, "set_number": {"1"},
-		"weight": {"85"}, "reps": {"8"}, "rir": {"1"},
-		"notes": {"buena sesión"}, "duration": {"55"},
-	}
-	if code, _ := post(t, ts, "/rutina/serie", edit); code != http.StatusSeeOther {
-		t.Fatalf("editar serie = %d", code)
-	}
-	wo, _ = st.WorkoutByDay(ctx, today)
-	if len(wo.Sets) != 2 {
-		t.Fatalf("editar no debe agregar series, hay %d", len(wo.Sets))
-	}
-	if wo.Sets[0].WeightKg == nil || *wo.Sets[0].WeightKg != 85 {
-		t.Errorf("la serie 1 no se actualizó: %+v", wo.Sets[0])
-	}
-
-	// Borrar la serie 1: la 2 pasa a ser 1 (sin huecos).
-	if code, _ := post(t, ts, "/rutina/serie", url.Values{
-		"csrf": {testCSRF}, "date": {today}, "accion": {"borrar"},
-		"exercise_id": {itoa(ex.ID)}, "set_number": {"1"},
-		"notes": {"buena sesión"}, "duration": {"55"},
-	}); code != http.StatusSeeOther {
-		t.Fatalf("borrar serie = %d", code)
-	}
-	wo, _ = st.WorkoutByDay(ctx, today)
-	if len(wo.Sets) != 1 || wo.Sets[0].SetNumber != 1 {
-		t.Fatalf("tras borrar: %+v", wo.Sets)
-	}
-	if wo.Sets[0].WeightKg == nil || *wo.Sets[0].WeightKg != 82.5 {
-		t.Errorf("quedó la serie equivocada: %+v", wo.Sets[0])
-	}
-
-	// Solo nota del día (sin ejercicio ni series).
-	if code, _ := post(t, ts, "/rutina/serie", url.Values{
-		"csrf": {testCSRF}, "date": {today}, "accion": {"guardar"},
-		"notes": {"solo nota"}, "duration": {"40"},
-	}); code != http.StatusSeeOther {
-		t.Fatalf("guardar nota = %d", code)
-	}
-	wo, _ = st.WorkoutByDay(ctx, today)
-	if wo.Notes != "solo nota" || wo.DurationMin != 40 || len(wo.Sets) != 1 {
-		t.Fatalf("la nota pisó las series: %+v", wo)
-	}
-
-	// Serie con ejercicio inexistente: 400.
-	if code, _ := post(t, ts, "/rutina/serie", url.Values{
-		"csrf": {testCSRF}, "date": {today}, "accion": {"guardar"},
-		"exercise_id": {"99999"}, "weight": {"80"}, "reps": {"10"},
-	}); code != http.StatusBadRequest {
-		t.Fatalf("ejercicio inexistente = %d, esperaba 400", code)
-	}
-}
-
-// TestNormalizeSetsYupsertSet cuidan la renumeración: sin esto, borrar una
-// serie del medio deja huecos y la sesión se vuelve ilegible.
-func TestNormalizeSetsYupsertSet(t *testing.T) {
-	kg := func(v float64) *float64 { return &v }
-	reps := func(v int) *int { return &v }
-
-	sets := []store.SetInput{
-		{ExerciseID: 1, SetNumber: 3, WeightKg: kg(80), Reps: reps(10)},
-		{ExerciseID: 1, SetNumber: 1, WeightKg: kg(70), Reps: reps(12)},
-		{ExerciseID: 2, SetNumber: 7, WeightKg: kg(50), Reps: reps(15)},
-	}
-	got := normalizeSets(sets)
-	if len(got) != 3 {
-		t.Fatalf("normalizeSets perdió series: %+v", got)
-	}
-	if got[0].ExerciseID != 1 || got[0].SetNumber != 1 || *got[0].WeightKg != 70 {
-		t.Errorf("orden del ejercicio 1: %+v", got[0])
-	}
-	if got[1].SetNumber != 2 || *got[1].WeightKg != 80 {
-		t.Errorf("renumeración del ejercicio 1: %+v", got[1])
-	}
-	if got[2].ExerciseID != 2 || got[2].SetNumber != 1 {
-		t.Errorf("renumeración del ejercicio 2: %+v", got[2])
-	}
-
-	// set_number vacío = siguiente libre.
-	next := upsertSet(got, store.SetInput{ExerciseID: 1, WeightKg: kg(85), Reps: reps(8)})
-	if len(next) != 4 {
-		t.Fatalf("upsert agregó mal: %+v", next)
-	}
-	if last := next[len(next)-1]; last.SetNumber != 3 || *last.WeightKg != 85 {
-		t.Errorf("la serie nueva no tomó el número 3: %+v", last)
-	}
-
-	// Mismo número = reemplazo, no duplicado.
-	replaced := upsertSet(next, store.SetInput{ExerciseID: 1, SetNumber: 2, WeightKg: kg(90), Reps: reps(6)})
-	if len(replaced) != 4 {
-		t.Fatalf("el reemplazo duplicó: %+v", replaced)
-	}
-	count := 0
-	for _, st := range replaced {
-		if st.ExerciseID == 1 && st.SetNumber == 2 {
-			count++
-			if st.WeightKg == nil || *st.WeightKg != 90 {
-				t.Errorf("no reemplazó los valores: %+v", st)
-			}
+	// El día guardado vuelve en la hoja con el último registro del ejercicio
+	// (la mejor serie del día: 82,5 kg × 8 le gana a 80 kg × 10).
+	_, body = get(t, ts, "/rutina?date="+today+"&day=A")
+	for _, want := range []string{"Último registro", "82,5 kg × 8", "buena sesión"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("la hoja guardada no muestra %q", want)
 		}
 	}
-	if count != 1 {
-		t.Errorf("esperaba una sola serie 2, hay %d", count)
+
+	// La hoja se reemplaza completa: si sólo se manda una serie de ex1, la de
+	// ex2 desaparece (borrar = no mandarla / dejar la fila vacía).
+	only := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"day_notes": {"buena sesión"}, "duration": {"55"},
+		"ex":   {itoa(ex1.ID), itoa(ex1.ID)},
+		"kg":   {"85", ""},
+		"reps": {"8", ""},
+		"rir":  {"1", ""},
+		"note": {"", ""},
+	}
+	if code, body := post(t, ts, "/rutina/hoja", only); code != http.StatusSeeOther {
+		t.Fatalf("reemplazar hoja = %d (%s)", code, body)
+	}
+	wo, _ = st.WorkoutByDay(ctx, today)
+	if len(wo.Sets) != 1 || wo.Sets[0].WeightKg == nil || *wo.Sets[0].WeightKg != 85 {
+		t.Fatalf("la hoja no se reemplazó completa: %+v", wo.Sets)
+	}
+
+	// Hoja vacía: deja el entrenamiento sin series pero conserva nota y duración.
+	empty := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"day_notes": {"solo nota"}, "duration": {"40"},
+		"ex": {itoa(ex1.ID)}, "kg": {""}, "reps": {""}, "rir": {""}, "note": {""},
+	}
+	if code, _ := post(t, ts, "/rutina/hoja", empty); code != http.StatusSeeOther {
+		t.Fatalf("guardar hoja sin series = %d", code)
+	}
+	wo, _ = st.WorkoutByDay(ctx, today)
+	if len(wo.Sets) != 0 || wo.Notes != "solo nota" || wo.DurationMin != 40 {
+		t.Fatalf("la hoja vacía pisó mal la sesión: %+v", wo)
+	}
+
+	// Un ejercicio que no es del día: 400 y no se toca nada.
+	bad := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"ex":   {itoa(dayB[0].ID)},
+		"kg":   {"50"}, "reps": {"10"}, "rir": {""}, "note": {""},
+	}
+	if code, body := post(t, ts, "/rutina/hoja", bad); code != http.StatusBadRequest {
+		t.Fatalf("ejercicio de otro día = %d, esperaba 400 (%s)", code, body)
+	}
+	// Nota sin peso ni reps no es una serie: 400 en vez de guardar basura.
+	lonely := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"ex":   {itoa(ex1.ID)},
+		"kg":   {""}, "reps": {""}, "rir": {""}, "note": {"me dolió"},
+	}
+	if code, body := post(t, ts, "/rutina/hoja", lonely); code != http.StatusBadRequest {
+		t.Fatalf("nota sin serie = %d, esperaba 400 (%s)", code, body)
+	}
+	// Rango absurdo.
+	absurd := url.Values{
+		"csrf": {testCSRF}, "date": {today}, "day": {"A"},
+		"ex":   {itoa(ex1.ID)},
+		"kg":   {"5000"}, "reps": {"10"}, "rir": {""}, "note": {""},
+	}
+	if code, _ := post(t, ts, "/rutina/hoja", absurd); code != http.StatusBadRequest {
+		t.Fatalf("peso 5000 = %d, esperaba 400", code)
+	}
+	// Sin CSRF no se guarda nada.
+	noCSRF := url.Values{
+		"date": {today}, "day": {"A"},
+		"ex":   {itoa(ex1.ID)},
+		"kg":   {"90"}, "reps": {"5"},
+	}
+	if code, _ := post(t, ts, "/rutina/hoja", noCSRF); code != http.StatusForbidden {
+		t.Fatalf("hoja sin csrf = %d, esperaba 403", code)
+	}
+	wo, _ = st.WorkoutByDay(ctx, today)
+	if len(wo.Sets) != 0 {
+		t.Fatalf("un POST rechazado no debe escribir series: %+v", wo.Sets)
 	}
 }
+
+// TestHojaEligeElDiaQueToca cuida la resolución del día activo: lo pedido
+// manda, después lo ya cargado y, si no hay nada, el que toca por calendario.
+func TestHojaEligeElDiaQueToca(t *testing.T) {
+	_, st, ts := newWeb(t)
+	ctx := context.Background()
+
+	// Lunes 2026-11-02 → día A por rotación (lunes = A).
+	_, body := get(t, ts, "/rutina?date=2026-11-02")
+	if !strings.Contains(body, `class="tab is-active" href="/rutina?date=2026-11-02&amp;day=A"`) {
+		t.Errorf("el lunes debería abrir el día A: %s", body[:300])
+	}
+	// Martes → B.
+	_, body = get(t, ts, "/rutina?date=2026-11-03")
+	if !strings.Contains(body, `day=B"`) || !strings.Contains(body, `href="/rutina?date=2026-11-03&amp;day=B"`) {
+		t.Errorf("el martes debería abrir el día B")
+	}
+	// Si el día ya tiene entrenamiento cargado, manda ese día.
+	if _, err := st.SaveWorkout(ctx, "2026-11-03", "C", "", 0, nil); err != nil {
+		t.Fatalf("workout previo: %v", err)
+	}
+	_, body = get(t, ts, "/rutina?date=2026-11-03")
+	if !strings.Contains(body, `class="tab is-active" href="/rutina?date=2026-11-03&amp;day=C"`) {
+		t.Errorf("con sesión C cargada, la hoja debe abrir C")
+	}
+}
+
 
 func itoa(v int64) string { return strconv.FormatInt(v, 10) }
