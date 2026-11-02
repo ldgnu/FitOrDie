@@ -146,6 +146,9 @@ func templateFuncs() template.FuncMap {
 		"rest":     restLabel,
 		"urlquery": url.QueryEscape,
 		"videoID":  routineVideoID,
+		// technique devuelve la guía curada (claves + errores + imagen) o nil:
+		// el template enrola el modal sólo si hay contenido.
+		"technique": technique,
 	}
 }
 

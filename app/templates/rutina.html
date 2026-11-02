@@ -84,12 +84,41 @@
           {{end}}
         </div>
 
+        {{$id := .ID}}{{$name := .Name}}{{$q := .YouTubeQuery}}
         <div class="ex__actions">
-          <button type="button" class="btn btn--ghost js-addset" data-ex="{{.ID}}">+ Agregar serie</button>
-          {{$name := .Name}}{{with videoID $name}}<button type="button" class="btn btn--accent js-video"
+          <button type="button" class="btn btn--ghost js-addset" data-ex="{{$id}}">+ Agregar serie</button>
+          <div class="ex__pair">
+            {{/* Técnica: abre el modal con claves, errores e imagen local. */}}
+            {{with technique $name}}<button type="button" class="btn js-tech" data-tech="tec-{{$id}}"
+               data-title="{{$name}}" data-tech-video="{{videoID $name}}"
+               data-tech-search="https://www.youtube.com/results?search_query={{urlquery $q}}"
+               aria-haspopup="dialog">Técnica</button>{{end}}
+            {{with videoID $name}}<button type="button" class="btn btn--accent js-video"
              data-video="{{.}}" data-title="{{$name}}" aria-haspopup="dialog">Ver video</button>{{else}}<a class="btn" target="_blank" rel="noopener noreferrer"
-             href="https://www.youtube.com/results?search_query={{urlquery .YouTubeQuery}}">Buscar video</a>{{end}}
+             href="https://www.youtube.com/results?search_query={{urlquery $q}}">Buscar video</a>{{end}}
+          </div>
         </div>
+
+        {{/* Contenido del modal "Técnica" para este ejercicio. Va oculto y el JS
+             lo clona dentro del <dialog> al abrir: una sola copia visible, cero
+             requests externos (la foto es local). */}}
+        {{with technique $name}}
+        <div class="tech" id="tec-{{$id}}" hidden>
+          <figure class="tech__fig">
+            <img class="tech__img" src="/static/img/exercises/{{.Slug}}.jpg?v={{$.AssetVer}}"
+              alt="Foto de {{$name}}" width="640" height="427" loading="lazy" decoding="async">
+          </figure>
+          <h4 class="tech__h">Claves de técnica</h4>
+          <ol class="tech__keys">
+            {{range .Keys}}<li>{{.}}</li>{{end}}
+          </ol>
+          <h4 class="tech__h">Errores comunes</h4>
+          <ul class="tech__errs">
+            {{range .Errors}}<li>{{.}}</li>{{end}}
+          </ul>
+          <p class="tech__credit">{{.Credit}}</p>
+        </div>
+        {{end}}
       </article>
       {{end}}
     </div>
@@ -193,6 +222,22 @@
     </p>
   </div>
 </dialog>
+
+{{/* Modal de técnica: uno solo para todos los ejercicios del día. El cuerpo se
+     llena clonando el panel oculto #tec-<id> del ejercicio clickeado. */}}
+<dialog class="vmodal tmodal" id="tech-modal" aria-labelledby="tech-modal-title">
+  <div class="vmodal__box tmodal__box">
+    <div class="vmodal__top">
+      <h2 class="vmodal__title" id="tech-modal-title">Técnica</h2>
+      <button type="button" class="vmodal__close" data-tech-close aria-label="Cerrar técnica">×</button>
+    </div>
+    <div class="tmodal__body" id="tech-body"></div>
+    <p class="vmodal__foot tmodal__foot">
+      <a id="tech-link" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" hidden>Ver el video de este ejercicio</a>
+    </p>
+  </div>
+</dialog>
 <script src="/static/js/video.js?v={{.AssetVer}}" defer></script>
+<script src="/static/js/technique.js?v={{.AssetVer}}" defer></script>
 <script src="/static/js/sheet.js?v={{.AssetVer}}" defer></script>
 {{end}}

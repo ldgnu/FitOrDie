@@ -251,6 +251,48 @@ h3{font-size:1.0625rem;font-weight:600;line-height:1.25}
 .vmodal__foot{margin-top:10px;text-align:right;font-size:.8125rem}
 .vmodal__foot a{color:var(--mute)}
 
+/* ---------------------------------------------------------- modal técnica */
+/* Mismo <dialog> que el video, pero más angosto y con el cuerpo scrolleable:
+   las claves + la foto no entran en una pantalla de teléfono. */
+.tmodal{width:min(calc(100% - 20px),34rem);max-width:34rem;max-height:94dvh}
+.tmodal__box{display:flex;flex-direction:column;max-height:94dvh;padding:14px 14px 10px}
+.tmodal__body{
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding-right:6px;padding-bottom:4px;scrollbar-gutter:stable;
+}
+.tmodal__foot{
+  display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line);text-align:right;
+}
+.tmodal__foot a{color:var(--accent);font-weight:600;font-size:.875rem}
+.tmodal__foot a[hidden]{display:none}
+
+/* La foto es chica (640×427, <60 KB) y local: se ve la posición real. */
+.tech__fig{
+  margin:0 0 2px;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  background:var(--surface2);aspect-ratio:3/2;
+}
+.tech__img{display:block;width:100%;height:100%;object-fit:cover}
+.tech__h{
+  margin:18px 0 8px;font-size:.75rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--mute);
+}
+.tech__keys,.tech__errs{display:grid;gap:9px;font-size:.9375rem;line-height:1.45;color:var(--dim)}
+.tech__keys{counter-reset:tech}
+.tech__keys li{position:relative;padding-left:28px;counter-increment:tech}
+.tech__keys li::before{
+  content:counter(tech);position:absolute;left:0;top:1px;
+  width:19px;height:19px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--accent);color:var(--bg);
+  font-size:.6875rem;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.tech__errs li{position:relative;padding-left:24px}
+.tech__errs li::before{
+  content:"×";position:absolute;left:2px;top:-1px;
+  color:var(--danger);font-weight:700;font-size:1.125rem;line-height:1.35;
+}
+.tech__credit{margin-top:14px;font-size:.75rem;color:var(--mute)}
+
 /* Scroll bloqueado mientras el modal está abierto (necesario en iOS Safari). */
 html.is-locked,body.is-locked{overflow:hidden}
 body.is-locked{touch-action:none}
@@ -465,6 +507,11 @@ main.auth{
 
 .ex__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .ex__actions .btn{margin-top:0;width:auto;flex:1 1 9rem;min-height:44px}
+/* En móvil: "Agregar serie" ocupa la fila y Técnica/Ver video se reparten la
+   siguiente, así no quedan tres botones apretados ni uno solo estirado. */
+.ex__actions > .btn{flex:1 1 100%}
+.ex__pair{display:flex;gap:8px;flex:1 1 100%}
+.ex__pair .btn{flex:1}
 .btn--ghost{
   border-color:color-mix(in srgb,var(--accent) 55%,transparent);
   background:transparent;color:var(--accent);
@@ -558,6 +605,24 @@ main.auth{
   .setrow--head .setrow__n{text-align:center;padding-left:0}
   .setrow.is-empty{border-style:dashed}
   .ex__actions .btn{flex:0 0 auto;padding:0 18px}
+  .ex__actions > .btn{flex:0 0 auto}
+  .ex__pair{flex:0 0 auto}
+
+  /* Modal de técnica en escritorio: foto a la izquierda y el texto a la
+     derecha, así entra completo sin scroll. En mobile sigue apilado. */
+  .tmodal{width:min(calc(100% - 40px),54rem);max-width:54rem}
+  .tmodal__body{
+    display:grid;grid-template-columns:22rem minmax(0,1fr);
+    grid-template-areas:
+      "fig kh" "fig keys" "fig eh" "fig errs" "fig credit";
+    gap:0 22px;align-items:start;
+  }
+  .tech__fig{grid-area:fig;align-self:stretch;height:100%;min-height:16rem;aspect-ratio:auto;margin:0}
+  .tech__h:nth-of-type(1){grid-area:kh;margin-top:0}
+  .tech__keys{grid-area:keys}
+  .tech__h:nth-of-type(2){grid-area:eh}
+  .tech__errs{grid-area:errs}
+  .tech__credit{grid-area:credit}
   .sheetfoot{
     grid-template-columns:minmax(0,1fr) 9rem auto;
     align-items:end;gap:12px;

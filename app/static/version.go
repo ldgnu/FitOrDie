@@ -9,19 +9,29 @@ package static
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"io/fs"
 )
 
-// assets son los archivos que entran en el hash: si cambia el CSS o el JS,
-// cambia la URL y el borde vuelve a pedir el archivo.
-var assets = []string{"css/app.css", "js/video.js", "js/sheet.js"}
+// assetDirs son los directorios que entran en el hash: si cambia el CSS, el JS
+// o una foto de ejercicio, cambia la URL y el borde vuelve a pedir el archivo.
+// embed.FS lista ordenado, así que el hash es estable entre builds.
+var assetDirs = []string{"css", "js", "img"}
 
 // Version se calcula una sola vez al arrancar (init del paquete).
 var Version = func() string {
 	h := sha256.New()
-	for _, name := range assets {
-		if b, err := FS.ReadFile(name); err == nil {
-			h.Write(b)
-		}
+	for _, dir := range assetDirs {
+		_ = fs.WalkDir(FS, dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return nil
+			}
+			if b, err := FS.ReadFile(path); err == nil {
+				// La ruta también entra: mover un archivo cambia la versión.
+				h.Write([]byte(path))
+				h.Write(b)
+			}
+			return nil
+		})
 	}
 	return hex.EncodeToString(h.Sum(nil))[:10]
 }()
