@@ -66,10 +66,6 @@
         </p>
 
         <div class="sets" data-ex="{{.ID}}">
-          <div class="setrow setrow--head" aria-hidden="true">
-            <span class="setrow__n">#</span>
-            <span>kg</span><span>reps</span><span>RIR</span><span class="s-note">nota</span><span></span>
-          </div>
           {{range .Rows}}
           <div class="setrow">
             <span class="setrow__n">{{if .SetNumber}}#{{.SetNumber}}{{else}}+{{end}}</span>
